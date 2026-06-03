@@ -33,6 +33,9 @@ def create_app():
         from models import Church
         cid = session.get('church_id')
         church = Church.query.get(cid) if cid else None
+        # If church_id in session but church not found, clear it
+        if cid and not church:
+            session.pop('church_id', None)
         # Inject list of churches user can switch to
         churches_list = []
         if current_user.is_authenticated:
@@ -164,7 +167,7 @@ def create_app():
         recent_baptisms = Baptism.query.filter_by(church_id=cid).order_by(Baptism.created_at.desc()).limit(5).all()
         recent_tithes = TitheRecord.query.filter_by(church_id=cid).order_by(TitheRecord.created_at.desc()).limit(5).all()
 
-        return render_template('dashboard.html',
+        resp = render_template('dashboard.html',
             total_members=total_members,
             total_tithes=total_tithes,
             total_baptisms=total_baptisms,
@@ -178,6 +181,9 @@ def create_app():
             recent_baptisms=recent_baptisms,
             recent_tithes=recent_tithes,
             year=year)
+        resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        resp.headers['Pragma'] = 'no-cache'
+        return resp
 
     @app.route('/health')
     def health():

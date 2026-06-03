@@ -81,8 +81,13 @@ def switch_church(church_id):
         flash('Church not found', 'danger')
         return redirect('/dashboard')
     session['church_id'] = church_id
+    session.modified = True
     flash(f'Switched to {church.name}', 'success')
-    return redirect('/dashboard')
+    resp = redirect('/dashboard')
+    resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    resp.headers['Pragma'] = 'no-cache'
+    resp.headers['Expires'] = '0'
+    return resp
 
 
 @auth_bp.route('/users')

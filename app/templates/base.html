@@ -255,6 +255,11 @@
                 </div>
             </div>
             {% endif %}
+            {% if demo_mode %}
+            <span class="badge bg-warning text-dark me-2 d-none d-md-inline">
+                <i class="bi bi-exclamation-triangle me-1"></i>Demo
+            </span>
+            {% endif %}
             <div class="d-flex align-items-center">
                 {% if current_user.is_authenticated %}
                 {% if user_churches|length > 1 %}

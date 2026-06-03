@@ -43,7 +43,8 @@ def create_app():
                 churches_list = Church.query.order_by(Church.name).all()
             elif current_user.church_id:
                 churches_list = Church.query.filter_by(id=current_user.church_id).all()
-        return dict(current_church=church, user_churches=churches_list)
+        demo_mode = os.environ.get('DEMO_MODE', 'false').lower() == 'true'
+        return dict(current_church=church, user_churches=churches_list, demo_mode=demo_mode)
 
     # Security middleware: validate church_id on every request
     @app.before_request
@@ -75,23 +76,33 @@ def create_app():
                 SabbathSchoolAttendance, Baptism, ChurchOfficer, Event, User, Church)
             with app.app_context():
                 db.create_all()
-                # Create default church and users if none exist
+                demo_mode = os.environ.get('DEMO_MODE', 'false').lower() == 'true'
                 if Church.query.count() == 0:
-                    church = Church(name='SDA Central Church', location='Nairobi',
-                                    district='Nairobi Central', region='Central Kenya')
-                    db.session.add(church)
-                    db.session.flush()
-                    defaults = [
-                        ('admin', 'admin', 'admin', None, church.id),
-                        ('pastor', 'pastor', 'pastor', None, church.id),
-                        ('clerk', 'clerk', 'clerk', None, church.id),
-                        ('ss_head', 'ss123', 'dept_head', 'Sabbath School', church.id),
-                    ]
-                    for username, password, role, dept, cid in defaults:
-                        u = User(username=username, role=role, department=dept, church_id=cid)
-                        u.set_password(password)
-                        db.session.add(u)
-                    db.session.commit()
+                    if demo_mode:
+                        from seed import seed_demo_data
+                        models = {'Church': Church, 'User': User, 'Member': Member,
+                            'TitheRecord': TitheRecord, 'Offering': Offering,
+                            'SabbathSchoolClass': SabbathSchoolClass,
+                            'SabbathSchoolAttendance': SabbathSchoolAttendance,
+                            'Baptism': Baptism, 'ChurchOfficer': ChurchOfficer, 'Event': Event}
+                        stats = seed_demo_data(db, models)
+                        app.logger.info(f'Demo data seeded: {stats}')
+                    else:
+                        church = Church(name='SDA Central Church', location='Nairobi',
+                                        district='Nairobi Central', region='Central Kenya')
+                        db.session.add(church)
+                        db.session.flush()
+                        defaults = [
+                            ('admin', 'admin', 'admin', None, church.id),
+                            ('pastor', 'pastor', 'pastor', None, church.id),
+                            ('clerk', 'clerk', 'clerk', None, church.id),
+                            ('ss_head', 'ss123', 'dept_head', 'Sabbath School', church.id),
+                        ]
+                        for username, password, role, dept, cid in defaults:
+                            u = User(username=username, role=role, department=dept, church_id=cid)
+                            u.set_password(password)
+                            db.session.add(u)
+                        db.session.commit()
             _db_initialized = True
 
     # Register blueprints

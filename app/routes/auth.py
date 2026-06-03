@@ -263,3 +263,20 @@ def change_password():
                 db.session.rollback()
                 flash(f'Error: {str(e)}', 'danger')
     return render_template('auth/change_password.html')
+
+
+@auth_bp.route('/clear-demo', methods=['POST'])
+@admin_required
+def clear_demo():
+    from seed import clear_demo_data
+    from models import (Church, User, Member, TitheRecord, Offering,
+        SabbathSchoolClass, SabbathSchoolAttendance, Baptism, ChurchOfficer, Event)
+    models = {'Church': Church, 'User': User, 'Member': Member,
+        'TitheRecord': TitheRecord, 'Offering': Offering,
+        'SabbathSchoolClass': SabbathSchoolClass,
+        'SabbathSchoolAttendance': SabbathSchoolAttendance,
+        'Baptism': Baptism, 'ChurchOfficer': ChurchOfficer, 'Event': Event}
+    clear_demo_data(db, models)
+    session.pop('church_id', None)
+    flash('All data cleared. Restart app to seed fresh data.', 'warning')
+    return redirect('/dashboard')

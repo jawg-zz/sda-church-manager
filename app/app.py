@@ -1,5 +1,5 @@
 import os
-from flask import Flask, redirect, render_template, jsonify, request, session, url_for, flash
+from flask import Flask, redirect, render_template, jsonify, request, session, url_for, flash, make_response
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_required, current_user
 
@@ -167,7 +167,7 @@ def create_app():
         recent_baptisms = Baptism.query.filter_by(church_id=cid).order_by(Baptism.created_at.desc()).limit(5).all()
         recent_tithes = TitheRecord.query.filter_by(church_id=cid).order_by(TitheRecord.created_at.desc()).limit(5).all()
 
-        resp = render_template('dashboard.html',
+        resp = make_response(render_template('dashboard.html',
             total_members=total_members,
             total_tithes=total_tithes,
             total_baptisms=total_baptisms,
@@ -180,7 +180,7 @@ def create_app():
             recent_members=recent_members,
             recent_baptisms=recent_baptisms,
             recent_tithes=recent_tithes,
-            year=year)
+            year=year))
         resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         resp.headers['Pragma'] = 'no-cache'
         return resp

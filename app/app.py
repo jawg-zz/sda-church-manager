@@ -1,11 +1,16 @@
 import os
-from flask import Flask, redirect, render_template, jsonify, request, session
+from flask import Flask, redirect, render_template, jsonify, request, session, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_required, current_user
 
 db = SQLAlchemy()
 login_manager = LoginManager()
 _db_initialized = False
+
+# Routes that don't require a church to be selected
+NO_CHURCH_REQUIRED = {'auth.login', 'auth.logout', 'auth.select_church',
+                      'auth.switch_church', 'health', 'static'}
+
 
 def create_app():
     app = Flask(__name__)
@@ -28,7 +33,35 @@ def create_app():
         from models import Church
         cid = session.get('church_id')
         church = Church.query.get(cid) if cid else None
-        return dict(current_church=church)
+        # Inject list of churches user can switch to
+        churches_list = []
+        if current_user.is_authenticated:
+            if current_user.church_id:
+                churches_list = Church.query.filter_by(id=current_user.church_id).all()
+            elif current_user.role == 'admin':
+                churches_list = Church.query.order_by(Church.name).all()
+        return dict(current_church=church, user_churches=churches_list)
+
+    # Security middleware: validate church_id on every request
+    @app.before_request
+    def validate_church():
+        if request.endpoint in NO_CHURCH_REQUIRED or request.endpoint is None:
+            return
+        if not current_user.is_authenticated:
+            return
+        cid = session.get('church_id')
+        if not cid:
+            return redirect(url_for('auth.select_church'))
+        # Verify the church exists
+        from models import Church
+        if not Church.query.get(cid):
+            session.pop('church_id', None)
+            return redirect(url_for('auth.select_church'))
+        # Verify user has access to this church
+        if current_user.church_id and current_user.church_id != cid:
+            session['church_id'] = current_user.church_id
+            flash('Church access changed', 'warning')
+            return redirect(request.url)
 
     # Lazy table creation on first request (avoids gunicorn worker race condition)
     @app.before_request

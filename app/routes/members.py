@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from flask_login import login_required, current_user
 from app import db
-from models import Member
+from models import Member, Church
 
 members_bp = Blueprint('members', __name__, url_prefix='/members')
 
@@ -143,3 +143,43 @@ def delete_member(id):
         db.session.rollback()
         flash(f'Error deleting member: {str(e)}', 'danger')
     return redirect(url_for('members.list_members'))
+
+@members_bp.route('/transfer/<int:id>', methods=['GET', 'POST'])
+@login_required
+def transfer_member(id):
+    cid = session.get('church_id')
+    if not cid:
+        return redirect('/auth/select-church')
+    if not current_user.can_manage_users:
+        flash('Only admins can transfer members', 'danger')
+        return redirect(url_for('members.list_members'))
+    member = Member.query.filter_by(id=id, church_id=cid).first()
+    if not member:
+        flash('Member not found', 'danger')
+        return redirect(url_for('members.list_members'))
+    churches = Church.query.filter(Church.id != cid).order_by(Church.name).all()
+    if request.method == 'POST':
+        target_church_id = request.form.get('target_church_id', type=int)
+        transfer_date = request.form.get('transfer_date', '').strip()
+        reason = request.form.get('reason', '').strip()
+        if not target_church_id:
+            flash('Please select a target church', 'danger')
+            return render_template('members/transfer.html', member=member, churches=churches)
+        target_church = Church.query.get(target_church_id)
+        if not target_church:
+            flash('Target church not found', 'danger')
+            return render_template('members/transfer.html', member=member, churches=churches)
+        try:
+            old_church = Church.query.get(cid)
+            member.transfer_from = old_church.name if old_church else ''
+            member.membership_status = 'transferred'
+            member.church_id = target_church_id
+            if reason:
+                member.notes = (member.notes or '') + f'\n[Transfer {transfer_date or "N/A"} to {target_church.name}]: {reason}'
+            db.session.commit()
+            flash(f'{member.full_name} has been transferred to {target_church.name}', 'success')
+            return redirect(url_for('members.list_members'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error transferring member: {str(e)}', 'danger')
+    return render_template('members/transfer.html', member=member, churches=churches)

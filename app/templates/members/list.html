@@ -53,6 +53,9 @@
                         <td>
                             <a href="/members/view/{{ m.id }}" class="btn btn-sm btn-outline-light" title="View"><i class="bi bi-eye"></i></a>
                             <a href="/members/edit/{{ m.id }}" class="btn btn-sm btn-outline-primary" title="Edit"><i class="bi bi-pencil"></i></a>
+                            {% if current_user.role in ('admin', 'pastor') %}
+                            <a href="/members/transfer/{{ m.id }}" class="btn btn-sm btn-outline-warning" title="Transfer"><i class="bi bi-arrow-left-right"></i></a>
+                            {% endif %}
                             <form action="/members/delete/{{ m.id }}" method="post" class="d-inline" onsubmit="return confirm('Delete {{ m.full_name }}?')">
                                 <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></button>
                             </form>

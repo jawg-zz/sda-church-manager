@@ -165,7 +165,23 @@
             </a>
             <div class="d-flex align-items-center">
                 {% if current_user.is_authenticated %}
-                {% if current_church %}
+                {% if user_churches|length > 1 %}
+                <div class="dropdown me-2 d-none d-md-inline">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="bi bi-building me-1"></i>{{ current_church.name if current_church else 'Select Church' }}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        {% for c in user_churches %}
+                        <li>
+                            <a class="dropdown-item {% if current_church and c.id == current_church.id %}active{% endif %}"
+                               href="/auth/switch-church/{{ c.id }}">
+                                {{ c.name }}{% if c.location %} — {{ c.location }}{% endif %}
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% elif current_church %}
                 <span class="text-secondary me-2 d-none d-md-inline">
                     <i class="bi bi-building me-1"></i>{{ current_church.name }}
                 </span>
@@ -222,6 +238,11 @@
                 <a class="nav-link {% if request.path.startswith('/reports') %}active{% endif %}" href="/reports">
                     <i class="bi bi-graph-up"></i> Reports
                 </a>
+                {% if current_user.can_manage_users %}
+                <a class="nav-link {% if request.path == '/reports/conference' %}active{% endif %}" href="/reports/conference">
+                    <i class="bi bi-globe"></i> Conference
+                </a>
+                {% endif %}
                 {% if current_user.can_manage_users %}
                 <div class="sidebar-section">Administration</div>
                 <a class="nav-link {% if request.path.startswith('/auth/users') %}active{% endif %}" href="/auth/users">

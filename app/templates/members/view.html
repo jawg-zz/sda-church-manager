@@ -4,6 +4,9 @@
     <h1><i class="bi bi-person me-2"></i>{{ member.full_name }}</h1>
     <div>
         <a href="/finances/member/{{ member.id }}" class="btn btn-success btn-sm"><i class="bi bi-cash-coin"></i> Financial Statement</a>
+        {% if current_user.role in ('admin', 'pastor') %}
+        <a href="/members/transfer/{{ member.id }}" class="btn btn-warning btn-sm"><i class="bi bi-arrow-left-right"></i> Transfer</a>
+        {% endif %}
         <a href="/members/edit/{{ member.id }}" class="btn btn-primary btn-sm"><i class="bi bi-pencil"></i> Edit</a>
         <a href="/members" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Back</a>
     </div>

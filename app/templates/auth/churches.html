@@ -8,21 +8,24 @@
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-dark table-hover mb-0">
-                <thead><tr><th>Name</th><th>Location</th><th>District</th><th>Region</th><th>Members</th><th></th></tr></thead>
+                <thead><tr><th>Name</th><th>Location</th><th>District</th><th>Members</th><th>Baptisms</th><th>Tithes (YTD)</th><th></th></tr></thead>
                 <tbody>
                     {% for c in churches %}
+                    {% set s = stats.get(c.id, {}) %}
                     <tr>
                         <td><strong>{{ c.name }}</strong></td>
                         <td>{{ c.location or '-' }}</td>
                         <td>{{ c.district or '-' }}</td>
-                        <td>{{ c.region or '-' }}</td>
-                        <td>{{ c.members | length }}</td>
+                        <td>{{ s.get('members', 0) }}</td>
+                        <td>{{ s.get('baptisms', 0) }}</td>
+                        <td class="text-success">KES {{ "{:,.0f}".format(s.get('tithes', 0)) }}</td>
                         <td>
+                            <a href="/auth/switch-church/{{ c.id }}" class="btn btn-sm btn-outline-success" title="Switch to this church"><i class="bi bi-box-arrow-in-right"></i></a>
                             <a href="/auth/churches/edit/{{ c.id }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
                         </td>
                     </tr>
                     {% else %}
-                    <tr><td colspan="6" class="text-center text-secondary py-4">No churches yet</td></tr>
+                    <tr><td colspan="7" class="text-center text-secondary py-4">No churches yet</td></tr>
                     {% endfor %}
                 </tbody>
             </table>

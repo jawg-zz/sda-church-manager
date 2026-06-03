@@ -68,6 +68,23 @@ def logout():
     return redirect(url_for('auth.login'))
 
 
+@auth_bp.route('/switch-church/<int:church_id>')
+@login_required
+def switch_church(church_id):
+    # Verify user has access to this church
+    if current_user.church_id and current_user.church_id != church_id:
+        flash('You do not have access to this church', 'danger')
+        return redirect('/dashboard')
+    from models import Church
+    church = Church.query.get(church_id)
+    if not church:
+        flash('Church not found', 'danger')
+        return redirect('/dashboard')
+    session['church_id'] = church_id
+    flash(f'Switched to {church.name}', 'success')
+    return redirect('/dashboard')
+
+
 @auth_bp.route('/users')
 @admin_required
 def list_users():
@@ -157,8 +174,17 @@ def delete_user(id):
 @auth_bp.route('/churches')
 @admin_required
 def list_churches():
+    from sqlalchemy import func
+    from models import Member, TitheRecord, Baptism
     churches = Church.query.order_by(Church.name).all()
-    return render_template('auth/churches.html', churches=churches)
+    stats = {}
+    for c in churches:
+        member_count = Member.query.filter_by(church_id=c.id, membership_status='active').count()
+        tithe_total = db.session.query(func.sum(TitheRecord.amount)).filter(
+            TitheRecord.church_id == c.id).scalar() or 0
+        baptism_count = Baptism.query.filter_by(church_id=c.id).count()
+        stats[c.id] = {'members': member_count, 'tithes': float(tithe_total), 'baptisms': baptism_count}
+    return render_template('auth/churches.html', churches=churches, stats=stats)
 
 
 @auth_bp.route('/churches/add', methods=['GET', 'POST'])

@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from flask_login import login_required, current_user
 from app import db
-from models import Member, TitheRecord, Offering, Baptism, ChurchOfficer, SabbathSchoolClass, SabbathSchoolAttendance, Event
+from models import Member, TitheRecord, Offering, Baptism, ChurchOfficer, SabbathSchoolClass, SabbathSchoolAttendance, Event, Church
 from sqlalchemy import func
 from datetime import datetime
 
@@ -195,3 +195,31 @@ def growth_report():
         current_year_total=current_year_total,
         prev_year_total=prev_year_total,
         growth=growth, growth_pct=growth_pct)
+
+@reports_bp.route('/conference')
+@login_required
+def conference_report():
+    if not current_user.can_manage_users:
+        flash('Admin access required', 'danger')
+        return redirect(url_for('reports.index'))
+    churches = Church.query.order_by(Church.name).all()
+    church_stats = []
+    totals = {'active_members': 0, 'total_tithes': 0.0, 'total_offerings': 0.0, 'total_baptisms': 0}
+    for c in churches:
+        active = Member.query.filter_by(church_id=c.id, membership_status='active').count()
+        tithes = db.session.query(func.sum(TitheRecord.amount)).filter(TitheRecord.church_id == c.id).scalar() or 0
+        offerings = db.session.query(func.sum(Offering.amount)).filter(Offering.church_id == c.id).scalar() or 0
+        baptisms = Baptism.query.filter_by(church_id=c.id).count()
+        church_stats.append({
+            'name': c.name,
+            'location': c.location,
+            'active_members': active,
+            'total_tithes': float(tithes),
+            'total_offerings': float(offerings),
+            'total_baptisms': baptisms,
+        })
+        totals['active_members'] += active
+        totals['total_tithes'] += float(tithes)
+        totals['total_offerings'] += float(offerings)
+        totals['total_baptisms'] += baptisms
+    return render_template('reports/conference.html', church_stats=church_stats, totals=totals)

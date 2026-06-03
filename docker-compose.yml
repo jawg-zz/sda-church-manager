@@ -11,7 +11,7 @@ services:
       - DATABASE_URL=sqlite:///app/data/church.db
       - SECRET_KEY=${SECRET_KEY:-change-this-in-production}
     volumes:
-      - church_data:/app/data
+      - ../files/sda-church-manager/data:/app/data
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:5000/health"]
       interval: 30s
@@ -29,6 +29,3 @@ services:
       restart_policy:
         condition: unless-stopped
         delay: 5s
-
-volumes:
-  church_data:

@@ -8,7 +8,7 @@ services:
     environment:
       - TZ=Africa/Nairobi
       - FLASK_ENV=production
-      - DATABASE_URL=sqlite:///data/church.db
+      - DATABASE_URL=sqlite:///app/data/church.db
       - SECRET_KEY=${SECRET_KEY:-change-this-in-production}
     volumes:
       - church_data:/app/data

@@ -57,8 +57,8 @@ def create_app():
         if not Church.query.get(cid):
             session.pop('church_id', None)
             return redirect(url_for('auth.select_church'))
-        # Verify user has access to this church
-        if current_user.church_id and current_user.church_id != cid:
+        # Verify user has access to this church (admins can access any church)
+        if current_user.role != 'admin' and current_user.church_id and current_user.church_id != cid:
             session['church_id'] = current_user.church_id
             flash('Church access changed', 'warning')
             return redirect(request.url)

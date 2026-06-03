@@ -37,7 +37,7 @@
                     </table>
                 </div>
             </div>
-            {{ render_pagination(tithes, "finances.dashboard", page_o=1) }}
+            {{ render_pagination(tithes, "finances.dashboard", params={"page_o": 1}) }}
         </div>
     </div>
     <div class="col-md-6">
@@ -69,7 +69,7 @@
                     </table>
                 </div>
             </div>
-            {{ render_pagination(offerings, "finances.dashboard", page_t=1) }}
+            {{ render_pagination(offerings, "finances.dashboard", params={"page_t": 1}) }}
         </div>
     </div>
 </div>

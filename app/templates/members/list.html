@@ -67,6 +67,6 @@
             </table>
         </div>
     </div>
-    {{ render_pagination(pagination, "members.list_members", status=status, search=search) }}
+    {{ render_pagination(pagination, "members.list_members", params={"status": status, "search": search}) }}
 </div>
 {% endblock %}

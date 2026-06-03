@@ -1,31 +1,54 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="row justify-content-center mt-5">
-    <div class="col-md-5">
-        <div class="card">
-            <div class="card-body">
-                <h3 class="text-center mb-4"><i class="bi bi-building me-2"></i>Select Church</h3>
-                {% if churches %}
-                <form method="post">
-                    <div class="mb-3">
-                        <label class="form-label">Choose a church</label>
-                        <select name="church_id" class="form-select" required>
-                            <option value="">-- Select --</option>
-                            {% for c in churches %}
-                            <option value="{{ c.id }}">{{ c.name }}{% if c.location %} — {{ c.location }}{% endif %}</option>
-                            {% endfor %}
-                        </select>
+<div class="row justify-content-center mt-4">
+    <div class="col-lg-8">
+        <div class="text-center mb-4">
+            <h2><i class="bi bi-building me-2"></i>Select Church</h2>
+            <p class="text-secondary">Choose which church you want to manage</p>
+        </div>
+        {% if churches %}
+        <div class="row g-3">
+            {% for c in churches %}
+            <div class="col-md-6">
+                <a href="/auth/switch-church/{{ c.id }}" class="text-decoration-none">
+                    <div class="card church-select-card h-100 {% if current_church and c.id == current_church.id %}border-primary{% endif %}">
+                        <div class="card-body">
+                            <div class="d-flex align-items-start">
+                                <div class="stat-icon bg-primary bg-opacity-10 text-primary me-3 flex-shrink-0">
+                                    <i class="bi bi-building"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h5 class="mb-1 text-white">{{ c.name }}</h5>
+                                    {% if c.location %}
+                                    <p class="text-secondary mb-2"><i class="bi bi-geo-alt me-1"></i>{{ c.location }}</p>
+                                    {% endif %}
+                                    <div class="d-flex gap-3">
+                                        {% if c.district %}
+                                        <small class="text-muted"><i class="bi bi-map me-1"></i>{{ c.district }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% if current_church and c.id == current_church.id %}
+                                <span class="badge bg-primary ms-2">Current</span>
+                                {% else %}
+                                <i class="bi bi-box-arrow-in-right text-secondary"></i>
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100">Continue</button>
-                </form>
-                {% else %}
-                <div class="text-center text-secondary py-4">
-                    <p>No churches found. Create one first.</p>
-                    <a href="/auth/churches/add" class="btn btn-primary">Add Church</a>
-                </div>
-                {% endif %}
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-building fs-1 text-secondary d-block mb-3"></i>
+                <p class="text-secondary mb-3">No churches found. Create one first.</p>
+                <a href="/auth/churches/add" class="btn btn-primary">Add Church</a>
             </div>
         </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

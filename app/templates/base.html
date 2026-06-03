@@ -155,6 +155,55 @@
                 padding: 1rem;
             }
         }
+        .church-select-card {
+            background: #1f2937;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 0.75rem;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .church-select-card:hover {
+            border-color: var(--sda-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .church-select-card.border-primary {
+            border-color: var(--sda-blue);
+            background: rgba(0,51,102,0.1);
+        }
+        .church-switcher-btn {
+            border-color: rgba(255,255,255,0.2);
+            max-width: 220px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .church-switcher-btn:hover {
+            border-color: rgba(255,255,255,0.4);
+            background: rgba(255,255,255,0.05);
+        }
+        .church-switcher-menu {
+            min-width: 280px;
+            background: #1f2937;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .church-switcher-menu .dropdown-item {
+            color: #e5e7eb;
+            padding: 0.6rem 1rem;
+        }
+        .church-switcher-menu .dropdown-item:hover {
+            background: rgba(255,255,255,0.05);
+            color: #fff;
+        }
+        .church-switcher-menu .dropdown-item.active {
+            background: rgba(0,51,102,0.3);
+            color: #fff;
+        }
+        .church-switcher-menu .dropdown-header {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
     </style>
 </head>
 <body>
@@ -166,19 +215,33 @@
             <div class="d-flex align-items-center">
                 {% if current_user.is_authenticated %}
                 {% if user_churches|length > 1 %}
-                <div class="dropdown me-2 d-none d-md-inline">
-                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
-                        <i class="bi bi-building me-1"></i>{{ current_church.name if current_church else 'Select Church' }}
+                <div class="dropdown me-2">
+                    <button class="btn btn-sm btn-outline-light dropdown-toggle church-switcher-btn" data-bs-toggle="dropdown">
+                        <i class="bi bi-building me-1"></i>
+                        <span class="d-none d-md-inline">{{ current_church.name if current_church else 'Select Church' }}</span>
+                        <span class="d-md-none">Church</span>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end">
+                    <ul class="dropdown-menu dropdown-menu-end church-switcher-menu">
+                        <li class="dropdown-header text-secondary">Switch Church</li>
                         {% for c in user_churches %}
                         <li>
                             <a class="dropdown-item {% if current_church and c.id == current_church.id %}active{% endif %}"
                                href="/auth/switch-church/{{ c.id }}">
-                                {{ c.name }}{% if c.location %} — {{ c.location }}{% endif %}
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-building me-2 text-primary"></i>
+                                    <div>
+                                        <div>{{ c.name }}</div>
+                                        {% if c.location %}<small class="text-muted">{{ c.location }}</small>{% endif %}
+                                    </div>
+                                    {% if current_church and c.id == current_church.id %}
+                                    <i class="bi bi-check-lg ms-auto text-success"></i>
+                                    {% endif %}
+                                </div>
                             </a>
                         </li>
                         {% endfor %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/auth/select-church"><i class="bi bi-grid me-2"></i>All Churches</a></li>
                     </ul>
                 </div>
                 {% elif current_church %}

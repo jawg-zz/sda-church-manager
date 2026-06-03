@@ -8,10 +8,8 @@ services:
     environment:
       - TZ=Africa/Nairobi
       - FLASK_ENV=production
-      - DATABASE_URL=sqlite:///app/data/church.db
+      - DATABASE_URL=sqlite:///church.db
       - SECRET_KEY=${SECRET_KEY:-change-this-in-production}
-    volumes:
-      - ../files/sda-church-manager/data:/app/data
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:5000/health"]
       interval: 30s

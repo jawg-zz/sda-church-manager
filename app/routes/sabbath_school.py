@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from flask_login import login_required, current_user
 from app import db
-from models import SabbathSchoolClass, SabbathSchoolAttendance, Member
+from models import SabbathSchoolClass, SabbathSchoolAttendance, Member, log_audit
 
 sabbath_school_bp = Blueprint('ss', __name__, url_prefix='/sabbath-school')
 
@@ -34,6 +34,7 @@ def add_class():
             )
             db.session.add(c)
             db.session.commit()
+            log_audit(cid, current_user.id, 'create', 'ss_class', c.id, f'Added class: {c.name}')
             flash('Class created successfully', 'success')
             return redirect(url_for('ss.dashboard'))
         except Exception as e:
@@ -61,6 +62,7 @@ def edit_class(id):
             c.teacher = request.form.get('teacher', '')
             c.description = request.form.get('description', '')
             db.session.commit()
+            log_audit(cid, current_user.id, 'update', 'ss_class', c.id, f'Updated class: {c.name}')
             flash('Class updated successfully', 'success')
             return redirect(url_for('ss.dashboard'))
         except Exception as e:
@@ -84,6 +86,7 @@ def delete_class(id):
     try:
         db.session.delete(c)
         db.session.commit()
+        log_audit(cid, current_user.id, 'delete', 'ss_class', id, f'Deleted class')
         flash('Class deleted', 'warning')
     except Exception as e:
         db.session.rollback()
@@ -116,6 +119,7 @@ def attendance(class_id):
                     db.session.add(SabbathSchoolAttendance(
                         class_id=class_id, member_id=m.id, date=date, present=present))
             db.session.commit()
+            log_audit(cid, current_user.id, 'update', 'ss_class', class_id, f'Updated attendance for class {cls.name}')
             flash('Attendance saved', 'success')
             return redirect(url_for('ss.view_attendance', class_id=class_id, date=date))
         except Exception as e:

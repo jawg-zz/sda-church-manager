@@ -76,7 +76,7 @@ def create_app():
         global _db_initialized
         if not _db_initialized:
             from models import (Member, TitheRecord, Offering, SabbathSchoolClass,
-                SabbathSchoolAttendance, Baptism, ChurchOfficer, Event, User, Church)
+                SabbathSchoolAttendance, Baptism, ChurchOfficer, Event, User, Church, AuditLog)
             with app.app_context():
                 db.create_all()
                 demo_mode = os.environ.get('DEMO_MODE', 'false').lower() == 'true'

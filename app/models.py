@@ -218,3 +218,21 @@ class Event(db.Model):
     description = db.Column(db.Text)
     organizer = db.Column(db.String(200))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+def log_audit(church_id, user_id, action, entity, entity_id=None, details=None, ip=None):
+    """Helper to write an audit log entry."""
+    from flask import session, request
+    entry = AuditLog(
+        church_id=church_id,
+        user_id=user_id or (session.get('_user_id')),
+        action=action,
+        entity=entity,
+        entity_id=entity_id,
+        details=details,
+        ip_address=ip or (request.remote_addr if request else None),
+    )
+    # Use the db from the same module context
+    from app import db as _db
+    _db.session.add(entry)
+    _db.session.flush()

@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from flask_login import login_required, current_user
 from app import db
-from models import Member, TitheRecord, Offering
+from models import Member, TitheRecord, Offering, log_audit
 from datetime import datetime
 
 finances_bp = Blueprint('finances', __name__, url_prefix='/finances')
@@ -59,6 +59,7 @@ def add_tithe():
             )
             db.session.add(t)
             db.session.commit()
+            log_audit(cid, current_user.id, 'create', 'tithe', t.id, f'Added tithe: {t.amount}')
             flash('Tithe recorded successfully', 'success')
             return redirect(url_for('finances.dashboard'))
         except (ValueError, KeyError) as e:
@@ -89,6 +90,7 @@ def edit_tithe(id):
             t.period_year = int(request.form['period_year'])
             t.notes = request.form.get('notes', '')
             db.session.commit()
+            log_audit(cid, current_user.id, 'update', 'tithe', t.id, f'Updated tithe: {t.amount}')
             flash('Tithe updated', 'success')
             return redirect(url_for('finances.dashboard'))
         except (ValueError, KeyError) as e:
@@ -116,6 +118,7 @@ def delete_tithe(id):
     try:
         db.session.delete(t)
         db.session.commit()
+        log_audit(cid, current_user.id, 'delete', 'tithe', id, f'Deleted tithe record')
         flash('Tithe record deleted', 'warning')
     except Exception as e:
         db.session.rollback()
@@ -140,6 +143,7 @@ def add_offering():
             )
             db.session.add(o)
             db.session.commit()
+            log_audit(cid, current_user.id, 'create', 'offering', o.id, f'Added offering: {o.amount}')
             flash('Offering recorded successfully', 'success')
             return redirect(url_for('finances.dashboard'))
         except (ValueError, KeyError) as e:
@@ -169,6 +173,7 @@ def edit_offering(id):
             o.category = request.form['category']
             o.notes = request.form.get('notes', '')
             db.session.commit()
+            log_audit(cid, current_user.id, 'update', 'offering', o.id, f'Updated offering: {o.amount}')
             flash('Offering updated', 'success')
             return redirect(url_for('finances.dashboard'))
         except (ValueError, KeyError) as e:
@@ -196,6 +201,7 @@ def delete_offering(id):
     try:
         db.session.delete(o)
         db.session.commit()
+        log_audit(cid, current_user.id, 'delete', 'offering', id, f'Deleted offering record')
         flash('Offering record deleted', 'warning')
     except Exception as e:
         db.session.rollback()

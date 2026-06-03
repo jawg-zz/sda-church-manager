@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from flask_login import login_required, current_user
 from app import db
-from models import ChurchOfficer, Member
+from models import ChurchOfficer, Member, log_audit
 from datetime import datetime
 
 officers_bp = Blueprint('officers', __name__, url_prefix='/officers')
@@ -59,6 +59,7 @@ def add_officer():
             )
             db.session.add(o)
             db.session.commit()
+            log_audit(cid, current_user.id, 'create', 'officer', o.id, f'Added officer: {o.role}')
             flash('Officer assigned successfully', 'success')
             return redirect(url_for('officers.list_officers'))
         except (ValueError, KeyError) as e:
@@ -101,6 +102,7 @@ def edit_officer(id):
             o.end_date = request.form.get('end_date', '')
             o.active = request.form.get('active', 'true') == 'true'
             db.session.commit()
+            log_audit(cid, current_user.id, 'update', 'officer', o.id, f'Updated officer: {o.role}')
             flash('Officer updated successfully', 'success')
             return redirect(url_for('officers.list_officers'))
         except (ValueError, KeyError) as e:
@@ -128,6 +130,7 @@ def delete_officer(id):
     try:
         db.session.delete(o)
         db.session.commit()
+        log_audit(cid, current_user.id, 'delete', 'officer', id, f'Deleted officer')
         flash('Officer removed', 'warning')
     except Exception as e:
         db.session.rollback()

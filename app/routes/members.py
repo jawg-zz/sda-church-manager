@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, Response
 from flask_login import login_required, current_user
 from app import db
-from models import Member, Church
+from models import Member, Church, log_audit
 import csv
 import io
 
@@ -62,6 +62,7 @@ def add_member():
             )
             db.session.add(member)
             db.session.commit()
+            log_audit(cid, current_user.id, 'create', 'member', member.id, f'Added member: {member.full_name}')
             flash('Member added successfully', 'success')
             return redirect(url_for('members.list_members'))
         except Exception as e:
@@ -105,6 +106,7 @@ def edit_member(id):
             member.emergency_phone = request.form.get('emergency_phone', '')
             member.notes = request.form.get('notes', '')
             db.session.commit()
+            log_audit(cid, current_user.id, 'update', 'member', member.id, f'Updated member: {member.full_name}')
             flash('Member updated successfully', 'success')
             return redirect(url_for('members.list_members'))
         except Exception as e:
@@ -140,6 +142,7 @@ def delete_member(id):
     try:
         db.session.delete(member)
         db.session.commit()
+        log_audit(cid, current_user.id, 'delete', 'member', id, f'Deleted member: {member.full_name}')
         flash('Member deleted', 'warning')
     except Exception as e:
         db.session.rollback()
@@ -179,6 +182,7 @@ def transfer_member(id):
             if reason:
                 member.notes = (member.notes or '') + f'\n[Transfer {transfer_date or "N/A"} to {target_church.name}]: {reason}'
             db.session.commit()
+            log_audit(cid, current_user.id, 'transfer', 'member', member.id, f'Transferred to church {target_church.name}')
             flash(f'{member.full_name} has been transferred to {target_church.name}', 'success')
             return redirect(url_for('members.list_members'))
         except Exception as e:
@@ -230,6 +234,7 @@ def import_members():
                 errors.append(f'Row {i}: {str(e)}')
                 skipped += 1
         db.session.commit()
+        log_audit(cid, current_user.id, 'create', 'member', 0, f'Imported {imported} members')
         session.pop('import_pending', None)
         flash(f'Imported {imported} members ({skipped} skipped)', 'success')
         for err in errors[:5]:

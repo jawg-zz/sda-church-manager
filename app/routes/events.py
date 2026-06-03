@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from flask_login import login_required, current_user
 from app import db
-from models import Event
+from models import Event, log_audit
 from datetime import datetime
 
 events_bp = Blueprint('events', __name__, url_prefix='/events')
@@ -51,6 +51,7 @@ def add_event():
             )
             db.session.add(e)
             db.session.commit()
+            log_audit(cid, current_user.id, 'create', 'event', e.id, f'Added event: {e.title}')
             flash('Event created successfully', 'success')
             return redirect(url_for('events.list_events'))
         except (ValueError, KeyError) as e:
@@ -98,6 +99,7 @@ def edit_event(id):
             e.description = request.form.get('description', '')
             e.organizer = request.form.get('organizer', '')
             db.session.commit()
+            log_audit(cid, current_user.id, 'update', 'event', e.id, f'Updated event: {e.title}')
             flash('Event updated successfully', 'success')
             return redirect(url_for('events.list_events'))
         except (ValueError, KeyError) as e:
@@ -124,6 +126,7 @@ def delete_event(id):
     try:
         db.session.delete(e)
         db.session.commit()
+        log_audit(cid, current_user.id, 'delete', 'event', id, f'Deleted event')
         flash('Event deleted', 'warning')
     except Exception as ex:
         db.session.rollback()

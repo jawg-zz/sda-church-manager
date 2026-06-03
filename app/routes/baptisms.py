@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from flask_login import login_required, current_user
 from app import db
-from models import Baptism, Member
+from models import Baptism, Member, log_audit
 from datetime import datetime
 
 baptisms_bp = Blueprint('baptisms', __name__, url_prefix='/baptisms')
@@ -42,6 +42,7 @@ def add_baptism():
                 member.baptism_location = b.location
                 member.baptism_by = b.baptizer
             db.session.commit()
+            log_audit(cid, current_user.id, 'create', 'baptism', b.id, f'Added baptism record')
             flash('Baptism recorded successfully', 'success')
             return redirect(url_for('baptisms.list_baptisms'))
         except (ValueError, KeyError) as e:
@@ -84,6 +85,7 @@ def edit_baptism(id):
             b.certificate_number = request.form.get('certificate_number', '')
             b.notes = request.form.get('notes', '')
             db.session.commit()
+            log_audit(cid, current_user.id, 'update', 'baptism', b.id, f'Updated baptism record')
             flash('Baptism record updated', 'success')
             return redirect(url_for('baptisms.list_baptisms'))
         except (ValueError, KeyError) as e:
@@ -111,6 +113,7 @@ def delete_baptism(id):
     try:
         db.session.delete(b)
         db.session.commit()
+        log_audit(cid, current_user.id, 'delete', 'baptism', id, f'Deleted baptism record')
         flash('Baptism record deleted', 'warning')
     except Exception as e:
         db.session.rollback()

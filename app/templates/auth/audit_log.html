@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+    <h1><i class="bi bi-shield-check me-2"></i>Audit Log</h1>
+    <div class="d-flex gap-2">
+        <form method="get" class="d-flex gap-2">
+            <select name="action" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="">All Actions</option>
+                {% for a in ['create', 'update', 'delete', 'login', 'transfer'] %}
+                <option value="{{ a }}" {% if action_filter == a %}selected{% endif %}>{{ a|title }}</option>
+                {% endfor %}
+            </select>
+            <select name="entity" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="">All Entities</option>
+                {% for e in ['member', 'tithe', 'offering', 'baptism', 'officer', 'event', 'ss_class', 'user', 'church'] %}
+                <option value="{{ e }}" {% if entity_filter == e %}selected{% endif %}>{{ e|replace('_', ' ')|title }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover table-sm mb-0">
+                <thead>
+                    <tr>
+                        <th style="width:160px">Time</th>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Entity</th>
+                        <th>Details</th>
+                        <th>IP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td><small class="text-secondary">{{ log.created_at.strftime('%Y-%m-%d %H:%M') }}</small></td>
+                        <td>{{ users.get(log.user_id, 'System') }}</td>
+                        <td>
+                            {% if log.action == 'create' %}
+                            <span class="badge bg-success">Create</span>
+                            {% elif log.action == 'update' %}
+                            <span class="badge bg-primary">Update</span>
+                            {% elif log.action == 'delete' %}
+                            <span class="badge bg-danger">Delete</span>
+                            {% elif log.action == 'login' %}
+                            <span class="badge bg-info">Login</span>
+                            {% elif log.action == 'transfer' %}
+                            <span class="badge bg-warning text-dark">Transfer</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ log.action }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ log.entity|replace('_', ' ')|title }} {% if log.entity_id %}#{{ log.entity_id }}{% endif %}</td>
+                        <td class="text-secondary">{{ log.details or '-' }}</td>
+                        <td><small class="text-muted">{{ log.ip_address or '-' }}</small></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" class="text-center text-secondary py-4">No audit records</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {{ render_pagination(pagination, "auth.audit_log", params={"action": action_filter, "entity": entity_filter}) }}
+</div>
+{% endblock %}

@@ -373,6 +373,9 @@
                 <a class="nav-link {% if request.path.startswith('/auth/churches') %}active{% endif %}" href="/auth/churches">
                     <i class="bi bi-building"></i> Churches
                 </a>
+                <a class="nav-link {% if request.path.startswith('/auth/audit-log') %}active{% endif %}" href="/auth/audit-log">
+                    <i class="bi bi-shield-check"></i> Audit Log
+                </a>
                 {% endif %}
                 <div class="sidebar-section">Account</div>
                 <a class="nav-link {% if request.path == '/auth/change-password' %}active{% endif %}" href="/auth/change-password">

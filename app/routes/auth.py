@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from flask_login import login_required, login_user, logout_user, current_user
 from app import db
-from models import User, Church, ROLES
+from models import User, Church, ROLES, log_audit
 from functools import wraps
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
@@ -28,6 +28,7 @@ def login():
         user = User.query.filter_by(username=username).first()
         if user and user.check_password(password):
             login_user(user)
+            log_audit(user.church_id, user.id, 'login', 'user', user.id, f'User {user.username} logged in')
             # Auto-select church if user belongs to only one
             churches = Church.query.filter_by(id=user.church_id).all() if user.church_id else []
             if len(churches) == 1:
@@ -120,6 +121,7 @@ def add_user():
                 user.set_password(password)
                 db.session.add(user)
                 db.session.commit()
+                log_audit(cid, current_user.id, 'create', 'user', user.id, f'Created user: {username}')
                 flash(f'User {username} created', 'success')
                 return redirect(url_for('auth.list_users'))
             except Exception as e:
@@ -151,6 +153,7 @@ def edit_user(id):
                         return render_template('auth/user_form.html', user=user, ROLES=ROLES)
                     user.set_password(new_password)
                 db.session.commit()
+                log_audit(session.get('church_id'), current_user.id, 'update', 'user', user.id, f'Updated user: {user.username}')
                 flash(f'User {user.username} updated', 'success')
                 return redirect(url_for('auth.list_users'))
             except Exception as e:
@@ -169,6 +172,7 @@ def delete_user(id):
     try:
         db.session.delete(user)
         db.session.commit()
+        log_audit(session.get('church_id'), current_user.id, 'delete', 'user', id, f'Deleted user: {user.username}')
         flash(f'User {user.username} deleted', 'warning')
     except Exception as e:
         db.session.rollback()
@@ -211,6 +215,7 @@ def add_church():
                 )
                 db.session.add(church)
                 db.session.commit()
+                log_audit(session.get('church_id'), current_user.id, 'create', 'church', church.id, f'Created church: {name}')
                 flash(f'Church "{name}" created', 'success')
                 return redirect(url_for('auth.list_churches'))
             except Exception as e:
@@ -232,6 +237,7 @@ def edit_church(id):
         church.email = request.form.get('email', '')
         try:
             db.session.commit()
+            log_audit(session.get('church_id'), current_user.id, 'update', 'church', church.id, f'Updated church: {church.name}')
             flash('Church updated', 'success')
             return redirect(url_for('auth.list_churches'))
         except Exception as e:
@@ -257,6 +263,7 @@ def change_password():
             try:
                 current_user.set_password(new)
                 db.session.commit()
+                log_audit(session.get('church_id'), current_user.id, 'update', 'user', current_user.id, f'Password changed for user: {current_user.username}')
                 flash('Password changed successfully', 'success')
                 return redirect('/dashboard')
             except Exception as e:
@@ -280,3 +287,31 @@ def clear_demo():
     session.pop('church_id', None)
     flash('All data cleared. Restart app to seed fresh data.', 'warning')
     return redirect('/dashboard')
+
+
+@auth_bp.route('/audit-log')
+@login_required
+def audit_log():
+    if not (current_user.can_manage_users or current_user.role == 'pastor'):
+        flash('Access denied', 'danger')
+        return redirect('/dashboard')
+    cid = session.get('church_id')
+    if not cid:
+        return redirect('/auth/select-church')
+    page = request.args.get('page', 1, type=int)
+    action_filter = request.args.get('action', '')
+    entity_filter = request.args.get('entity', '')
+    from models import AuditLog, User
+    query = AuditLog.query.filter_by(church_id=cid)
+    if action_filter:
+        query = query.filter_by(action=action_filter)
+    if entity_filter:
+        query = query.filter_by(entity=entity_filter)
+    pagination = query.order_by(AuditLog.created_at.desc()).paginate(
+        page=page, per_page=30, error_out=False)
+    # Get user names for display
+    user_ids = {log.user_id for log in pagination.items if log.user_id}
+    users = {u.id: u.username for u in User.query.filter(User.id.in_(user_ids)).all()} if user_ids else {}
+    return render_template('auth/audit_log.html', logs=pagination.items,
+        pagination=pagination, users=users, action_filter=action_filter,
+        entity_filter=entity_filter)

@@ -1,0 +1,34 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    expose:
+      - "5000"
+    environment:
+      - TZ=Africa/Nairobi
+      - FLASK_ENV=production
+      - DATABASE_URL=sqlite:///data/church.db
+      - SECRET_KEY=${SECRET_KEY:-change-this-in-production}
+    volumes:
+      - church_data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "256M"
+        reservations:
+          cpus: "0.1"
+          memory: "64M"
+      restart_policy:
+        condition: unless-stopped
+        delay: 5s
+
+volumes:
+  church_data:

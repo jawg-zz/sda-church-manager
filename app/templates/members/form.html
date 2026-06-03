@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-people me-2"></i>{% if member %}Edit{% else %}Add{% endif %} Member</h1>
+</div>
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Full Name *</label>
+                    <input type="text" name="full_name" class="form-control" required value="{{ member.full_name if member else '' }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Gender</label>
+                    <select name="gender" class="form-select">
+                        <option value="">-- Select --</option>
+                        <option value="Male" {% if member and member.gender == 'Male' %}selected{% endif %}>Male</option>
+                        <option value="Female" {% if member and member.gender == 'Female' %}selected{% endif %}>Female</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Date of Birth</label>
+                    <input type="date" name="date_of_birth" class="form-control" value="{{ member.date_of_birth if member else '' }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Phone</label>
+                    <input type="text" name="phone" class="form-control" value="{{ member.phone if member else '' }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" class="form-control" value="{{ member.email if member else '' }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Membership Status</label>
+                    <select name="membership_status" class="form-select">
+                        <option value="active" {% if not member or member.membership_status == 'active' %}selected{% endif %}>Active</option>
+                        <option value="inactive" {% if member and member.membership_status == 'inactive' %}selected{% endif %}>Inactive</option>
+                        <option value="transferred" {% if member and member.membership_status == 'transferred' %}selected{% endif %}>Transferred</option>
+                        <option value="deceased" {% if member and member.membership_status == 'deceased' %}selected{% endif %}>Deceased</option>
+                        <option value="suspended" {% if member and member.membership_status == 'suspended' %}selected{% endif %}>Suspended</option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Address</label>
+                    <textarea name="address" class="form-control" rows="2">{{ member.address if member else '' }}</textarea>
+                </div>
+                <div class="col-12"><hr class="border-secondary"></div>
+                <div class="col-12"><h6 class="text-secondary">Baptism Information</h6></div>
+                <div class="col-md-4">
+                    <label class="form-label">Baptism Date</label>
+                    <input type="date" name="baptism_date" class="form-control" value="{{ member.baptism_date if member else '' }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Baptism Location</label>
+                    <input type="text" name="baptism_location" class="form-control" value="{{ member.baptism_location if member else '' }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Baptized By</label>
+                    <input type="text" name="baptism_by" class="form-control" value="{{ member.baptism_by if member else '' }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Join Date</label>
+                    <input type="date" name="join_date" class="form-control" value="{{ member.join_date if member else '' }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Transfer From</label>
+                    <input type="text" name="transfer_from" class="form-control" value="{{ member.transfer_from if member else '' }}">
+                </div>
+                <div class="col-12"><hr class="border-secondary"></div>
+                <div class="col-12"><h6 class="text-secondary">Additional Information</h6></div>
+                <div class="col-md-3">
+                    <label class="form-label">Tribe</label>
+                    <input type="text" name="tribe" class="form-control" value="{{ member.tribe if member else '' }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Language</label>
+                    <input type="text" name="language" class="form-control" value="{{ member.language if member else '' }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Occupation</label>
+                    <input type="text" name="occupation" class="form-control" value="{{ member.occupation if member else '' }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Education Level</label>
+                    <select name="education_level" class="form-select">
+                        <option value="">-- Select --</option>
+                        <option value="Primary" {% if member and member.education_level == 'Primary' %}selected{% endif %}>Primary</option>
+                        <option value="Secondary" {% if member and member.education_level == 'Secondary' %}selected{% endif %}>Secondary</option>
+                        <option value="College" {% if member and member.education_level == 'College' %}selected{% endif %}>College</option>
+                        <option value="University" {% if member and member.education_level == 'University' %}selected{% endif %}>University</option>
+                        <option value="Postgraduate" {% if member and member.education_level == 'Postgraduate' %}selected{% endif %}>Postgraduate</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Emergency Contact</label>
+                    <input type="text" name="emergency_contact" class="form-control" value="{{ member.emergency_contact if member else '' }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Emergency Phone</label>
+                    <input type="text" name="emergency_phone" class="form-control" value="{{ member.emergency_phone if member else '' }}">
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Notes</label>
+                    <textarea name="notes" class="form-control" rows="3">{{ member.notes if member else '' }}</textarea>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg"></i> {% if member %}Update{% else %}Save{% endif %} Member
+                    </button>
+                    <a href="/members" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

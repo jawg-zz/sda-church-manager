@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header"><h1><i class="bi bi-person-badge me-2"></i>{% if officer %}Edit{% else %}Assign{% endif %} Officer</h1></div>
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Member *</label>
+                    <select name="member_id" class="form-select" required>
+                        <option value="">-- Select Member --</option>
+                        {% for m in members %}
+                        <option value="{{ m.id }}" {% if officer and officer.member_id == m.id %}selected{% endif %}>{{ m.full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Role *</label>
+                    <select name="role" class="form-select" required>
+                        <option value="">-- Select Role --</option>
+                        {% for r in ROLES %}
+                        <option value="{{ r }}" {% if officer and officer.role == r %}selected{% endif %}>{{ r }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Department</label>
+                    <select name="department" class="form-select">
+                        <option value="">-- None --</option>
+                        {% for d in DEPARTMENTS %}
+                        <option value="{{ d }}" {% if officer and officer.department == d %}selected{% endif %}>{{ d }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Start Date *</label>
+                    <input type="date" name="start_date" class="form-control" required value="{{ officer.start_date if officer else '' }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">End Date</label>
+                    <input type="date" name="end_date" class="form-control" value="{{ officer.end_date if officer else '' }}">
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check mt-4">
+                        <input type="checkbox" name="active" class="form-check-input" value="true" id="activeCheck" {% if not officer or officer.active %}checked{% endif %}>
+                        <label class="form-check-label" for="activeCheck">Currently Active</label>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Save</button>
+                    <a href="/officers" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

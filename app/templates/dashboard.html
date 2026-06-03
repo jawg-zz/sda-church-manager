@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+    <h1><i class="bi bi-speedometer2 me-2"></i>Dashboard</h1>
+    <div>
+        <span class="text-secondary me-2">{{ year }}</span>
+        <a href="/members/add" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-lg"></i> Add Member
+        </a>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card stat-card h-100">
+            <div class="card-body text-center">
+                <div class="stat-icon bg-primary bg-opacity-10 text-primary mx-auto mb-2">
+                    <i class="bi bi-people"></i>
+                </div>
+                <h3 class="mb-0">{{ total_members }}</h3>
+                <small class="text-secondary">Active Members</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card stat-card h-100">
+            <div class="card-body text-center">
+                <div class="stat-icon bg-success bg-opacity-10 text-success mx-auto mb-2">
+                    <i class="bi bi-cash-coin"></i>
+                </div>
+                <h3 class="mb-0">KES {{ "{:,.0f}".format(total_tithes) }}</h3>
+                <small class="text-secondary">Tithes (YTD)</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card stat-card h-100">
+            <div class="card-body text-center">
+                <div class="stat-icon bg-info bg-opacity-10 text-info mx-auto mb-2">
+                    <i class="bi bi-droplet"></i>
+                </div>
+                <h3 class="mb-0">{{ total_baptisms }}</h3>
+                <small class="text-secondary">Baptisms (YTD)</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card stat-card h-100">
+            <div class="card-body text-center">
+                <div class="stat-icon bg-warning bg-opacity-10 text-warning mx-auto mb-2">
+                    <i class="bi bi-person-badge"></i>
+                </div>
+                <h3 class="mb-0">{{ active_officers }}</h3>
+                <small class="text-secondary">Active Officers</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card stat-card h-100">
+            <div class="card-body text-center">
+                <div class="stat-icon bg-purple bg-opacity-10 text-purple mx-auto mb-2" style="color: #a78bfa;">
+                    <i class="bi bi-book"></i>
+                </div>
+                <h3 class="mb-0">{{ classes }}</h3>
+                <small class="text-secondary">SS Classes</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card stat-card h-100">
+            <div class="card-body text-center">
+                <div class="stat-icon" style="background: rgba(184,134,11,0.1); color: var(--sda-gold);">
+                    <i class="bi bi-person-plus"></i>
+                </div>
+                <h3 class="mb-0">{{ new_members_this_month }}</h3>
+                <small class="text-secondary">New This Month</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-8">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-calendar-event me-2"></i>Upcoming Events</span>
+                <a href="/events/add" class="btn btn-sm btn-outline-light">Add Event</a>
+            </div>
+            <div class="card-body p-0">
+                {% if upcoming_events %}
+                <div class="list-group list-group-flush bg-transparent">
+                    {% for event in upcoming_events %}
+                    <div class="list-group-item bg-transparent d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ event.title }}</strong>
+                            <br>
+                            <small class="text-secondary">
+                                <i class="bi bi-calendar3"></i> {{ event.date }}
+                                {% if event.time %} | <i class="bi bi-clock"></i> {{ event.time }}{% endif %}
+                                {% if event.location %} | <i class="bi bi-geo-alt"></i> {{ event.location }}{% endif %}
+                            </small>
+                        </div>
+                        <span class="badge bg-primary bg-opacity-10 text-primary">{{ event.event_type }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4 text-secondary">
+                    <i class="bi bi-calendar-x fs-2 d-block mb-2"></i>
+                    No upcoming events
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header">Quick Actions</div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="/tithe/add" class="btn btn-outline-light btn-sm text-start">
+                        <i class="bi bi-plus-circle me-2"></i>Record Tithe
+                    </a>
+                    <a href="/offering/add" class="btn btn-outline-light btn-sm text-start">
+                        <i class="bi bi-plus-circle me-2"></i>Record Offering
+                    </a>
+                    <a href="/baptisms/add" class="btn btn-outline-light btn-sm text-start">
+                        <i class="bi bi-plus-circle me-2"></i>Record Baptism
+                    </a>
+                    <a href="/officers/add" class="btn btn-outline-light btn-sm text-start">
+                        <i class="bi bi-plus-circle me-2"></i>Assign Officer
+                    </a>
+                    <a href="/sabbath-school/attendance" class="btn btn-outline-light btn-sm text-start">
+                        <i class="bi bi-plus-circle me-2"></i>SS Attendance
+                    </a>
+                    <a href="/reports" class="btn btn-outline-light btn-sm text-start">
+                        <i class="bi bi-file-text me-2"></i>View Reports
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

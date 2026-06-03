@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header"><h1><i class="bi bi-calendar-event me-2"></i>{% if event %}Edit{% else %}New{% endif %} Event</h1></div>
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Title *</label>
+                    <input type="text" name="title" class="form-control" required value="{{ event.title if event else '' }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Date *</label>
+                    <input type="date" name="date" class="form-control" required value="{{ event.date if event else '' }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Time</label>
+                    <input type="time" name="time" class="form-control" value="{{ event.time if event else '' }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Event Type</label>
+                    <select name="event_type" class="form-select">
+                        <option value="">-- Select --</option>
+                        {% for t in EVENT_TYPES %}
+                        <option value="{{ t }}" {% if event and event.event_type == t %}selected{% endif %}>{{ t }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Location</label>
+                    <input type="text" name="location" class="form-control" value="{{ event.location if event else '' }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Organizer</label>
+                    <input type="text" name="organizer" class="form-control" value="{{ event.organizer if event else '' }}">
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Description</label>
+                    <textarea name="description" class="form-control" rows="3">{{ event.description if event else '' }}</textarea>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Save</button>
+                    <a href="/events" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

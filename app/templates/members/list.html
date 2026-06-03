@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+    <h1><i class="bi bi-people me-2"></i>Members</h1>
+    <a href="/members/add" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Add Member</a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form class="row g-2" method="get">
+            <div class="col-md-6">
+                <input type="text" name="search" class="form-control" placeholder="Search by name..." value="{{ search }}">
+            </div>
+            <div class="col-md-4">
+                <select name="status" class="form-select">
+                    <option value="all" {% if status == 'all' %}selected{% endif %}>All Statuses</option>
+                    <option value="active" {% if status == 'active' %}selected{% endif %}>Active</option>
+                    <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>Inactive</option>
+                    <option value="transferred" {% if status == 'transferred' %}selected{% endif %}>Transferred</option>
+                    <option value="deceased" {% if status == 'deceased' %}selected{% endif %}>Deceased</option>
+                    <option value="suspended" {% if status == 'suspended' %}selected{% endif %}>Suspended</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-outline-light w-100">Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Status</th>
+                        <th>Baptism</th>
+                        <th>Age</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in members %}
+                    <tr>
+                        <td><a href="/members/view/{{ m.id }}" class="text-white text-decoration-none">{{ m.full_name }}</a></td>
+                        <td>{{ m.phone or '-' }}</td>
+                        <td><span class="badge member-status {% if m.membership_status == 'active' %}bg-success{% elif m.membership_status == 'inactive' %}bg-secondary{% elif m.membership_status == 'transferred' %}bg-info{% elif m.membership_status == 'deceased' %}bg-dark{% else %}bg-warning text-dark{% endif %}">{{ m.membership_status }}</span></td>
+                        <td>{{ m.baptism_date or '-' }}</td>
+                        <td>{{ m.age() or '-' }}</td>
+                        <td>
+                            <a href="/members/view/{{ m.id }}" class="btn btn-sm btn-outline-light" title="View"><i class="bi bi-eye"></i></a>
+                            <a href="/members/edit/{{ m.id }}" class="btn btn-sm btn-outline-primary" title="Edit"><i class="bi bi-pencil"></i></a>
+                            <form action="/members/delete/{{ m.id }}" method="post" class="d-inline" onsubmit="return confirm('Delete {{ m.full_name }}?')">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center text-secondary py-4">No members found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

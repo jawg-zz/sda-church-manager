@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header"><h1><i class="bi bi-graph-up me-2"></i>Reports</h1></div>
+<div class="row g-3">
+    <div class="col-md-4">
+        <a href="/reports/membership" class="text-decoration-none">
+            <div class="card h-100 stat-card">
+                <div class="card-body text-center py-5">
+                    <div class="stat-icon bg-primary bg-opacity-10 text-primary mx-auto mb-3">
+                        <i class="bi bi-people"></i>
+                    </div>
+                    <h5>Membership Report</h5>
+                    <p class="text-secondary small">Membership statistics by status</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="/reports/financial" class="text-decoration-none">
+            <div class="card h-100 stat-card">
+                <div class="card-body text-center py-5">
+                    <div class="stat-icon bg-success bg-opacity-10 text-success mx-auto mb-3">
+                        <i class="bi bi-cash-coin"></i>
+                    </div>
+                    <h5>Financial Report</h5>
+                    <p class="text-secondary small">Tithes and offerings monthly summary</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="/reports/baptism" class="text-decoration-none">
+            <div class="card h-100 stat-card">
+                <div class="card-body text-center py-5">
+                    <div class="stat-icon bg-info bg-opacity-10 text-info mx-auto mb-3">
+                        <i class="bi bi-droplet"></i>
+                    </div>
+                    <h5>Baptism Report</h5>
+                    <p class="text-secondary small">Baptism records for the year</p>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}

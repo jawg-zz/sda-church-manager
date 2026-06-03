@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-cash-coin me-2"></i>Financial Report - {{ year }}</h1>
+</div>
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="mb-0 text-success">KES {{ "{:,.0f}".format(total_tithe) }}</h2>
+                <small class="text-secondary">Total Tithes ({{ year }})</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="mb-0 text-info">KES {{ "{:,.0f}".format(total_offering) }}</h2>
+                <small class="text-secondary">Total Offerings ({{ year }})</small>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="card">
+    <div class="card-header">Monthly Summary</div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-dark mb-0">
+                <thead><tr><th>Month</th><th>Tithes</th><th>Offerings</th><th>Total</th></tr></thead>
+                <tbody>
+                    {% for i in range(12) %}
+                    <tr>
+                        <td>{{ ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][i] }}</td>
+                        <td class="text-success">KES {{ "{:,.0f}".format(monthly_tithes[i]) }}</td>
+                        <td class="text-info">KES {{ "{:,.0f}".format(monthly_offerings[i]) }}</td>
+                        <td>KES {{ "{:,.0f}".format(monthly_tithes[i] + monthly_offerings[i]) }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="table-active">
+                        <td><strong>Total</strong></td>
+                        <td><strong class="text-success">KES {{ "{:,.0f}".format(total_tithe) }}</strong></td>
+                        <td><strong class="text-info">KES {{ "{:,.0f}".format(total_offering) }}</strong></td>
+                        <td><strong>KES {{ "{:,.0f}".format(total_tithe + total_offering) }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

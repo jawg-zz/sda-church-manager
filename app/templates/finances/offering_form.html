@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header"><h1><i class="bi bi-gift me-2"></i>Record Offering</h1></div>
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Member (optional)</label>
+                    <select name="member_id" class="form-select">
+                        <option value="">-- Anonymous / General --</option>
+                        {% for m in members %}
+                        <option value="{{ m.id }}">{{ m.full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Amount (KES) *</label>
+                    <input type="number" name="amount" class="form-control" step="0.01" min="0" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Date *</label>
+                    <input type="date" name="date" class="form-control" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Category *</label>
+                    <select name="category" class="form-select" required>
+                        <option value="">-- Select --</option>
+                        <option value="Sabbath School">Sabbath School</option>
+                        <option value="Church Budget">Church Budget</option>
+                        <option value="Building Fund">Building Fund</option>
+                        <option value="Mission">Mission</option>
+                        <option value="Youth">Youth</option>
+                        <option value="Welfare">Welfare</option>
+                        <option value="Education">Education</option>
+                        <option value="Community Outreach">Community Outreach</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Notes</label>
+                    <textarea name="notes" class="form-control" rows="2"></textarea>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-success"><i class="bi bi-check-lg"></i> Save</button>
+                    <a href="/finances" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

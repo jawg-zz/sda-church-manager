@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+    <h1><i class="bi bi-droplet me-2"></i>Baptism: {{ baptism.member.full_name }}</h1>
+    <div>
+        <a href="/baptisms/edit/{{ baptism.id }}" class="btn btn-primary btn-sm"><i class="bi bi-pencil"></i> Edit</a>
+        <a href="/baptisms" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Back</a>
+    </div>
+</div>
+<div class="row g-3">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <label class="form-label text-secondary">Member</label>
+                        <p class="mb-0"><a href="/members/view/{{ baptism.member_id }}">{{ baptism.member.full_name }}</a></p>
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label text-secondary">Baptism Date</label>
+                        <p class="mb-0">{{ baptism.baptism_date }}</p>
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label text-secondary">Baptized By</label>
+                        <p class="mb-0">{{ baptism.baptizer or 'Not specified' }}</p>
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label text-secondary">Location</label>
+                        <p class="mb-0">{{ baptism.location or 'Not specified' }}</p>
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label text-secondary">Certificate #</label>
+                        <p class="mb-0">{{ baptism.certificate_number or 'Not assigned' }}</p>
+                    </div>
+                    {% if baptism.notes %}
+                    <div class="col-12">
+                        <label class="form-label text-secondary">Notes</label>
+                        <p class="mb-0">{{ baptism.notes }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">Actions</div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="/members/view/{{ baptism.member_id }}" class="btn btn-outline-info btn-sm">
+                        <i class="bi bi-person me-2"></i>View Member
+                    </a>
+                    <a href="/baptisms/edit/{{ baptism.id }}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-pencil me-2"></i>Edit Record
+                    </a>
+                    <form method="post" action="/baptisms/delete/{{ baptism.id }}"
+                          onsubmit="return confirm('Delete this baptism record?')">
+                        <button type="submit" class="btn btn-outline-danger btn-sm w-100">
+                            <i class="bi bi-trash me-2"></i>Delete Record
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

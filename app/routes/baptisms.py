@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for
+from flask import Blueprint, render_template, request, redirect, url_for, flash
 from app import db
 from models import Baptism, Member
 
@@ -28,13 +28,39 @@ def add_baptism():
             member.baptism_location = b.location
             member.baptism_by = b.baptizer
         db.session.commit()
+        flash('Baptism recorded successfully', 'success')
         return redirect(url_for('baptisms.list_baptisms'))
     members = Member.query.order_by(Member.full_name).all()
-    return render_template('baptisms/form.html', members=members)
+    from datetime import datetime
+    return render_template('baptisms/form.html', members=members, current_date=datetime.now().strftime('%Y-%m-%d'))
+
+@baptisms_bp.route('/view/<int:id>')
+def view_baptism(id):
+    b = Baptism.query.get_or_404(id)
+    return render_template('baptisms/view.html', baptism=b)
+
+@baptisms_bp.route('/edit/<int:id>', methods=['GET', 'POST'])
+def edit_baptism(id):
+    b = Baptism.query.get_or_404(id)
+    if request.method == 'POST':
+        b.member_id = request.form['member_id']
+        b.baptism_date = request.form['baptism_date']
+        b.baptizer = request.form.get('baptizer', '')
+        b.location = request.form.get('location', '')
+        b.certificate_number = request.form.get('certificate_number', '')
+        b.notes = request.form.get('notes', '')
+        db.session.commit()
+        flash('Baptism record updated', 'success')
+        return redirect(url_for('baptisms.list_baptisms'))
+    members = Member.query.order_by(Member.full_name).all()
+    from datetime import datetime
+    return render_template('baptisms/form.html', baptism=b, members=members,
+                          current_date=datetime.now().strftime('%Y-%m-%d'))
 
 @baptisms_bp.route('/delete/<int:id>', methods=['POST'])
 def delete_baptism(id):
     b = Baptism.query.get_or_404(id)
     db.session.delete(b)
     db.session.commit()
+    flash('Baptism record deleted', 'warning')
     return redirect(url_for('baptisms.list_baptisms'))

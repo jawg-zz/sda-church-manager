@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for
+from flask import Blueprint, render_template, request, redirect, url_for, flash
 from app import db
 from models import ChurchOfficer, Member
 
@@ -45,9 +45,16 @@ def add_officer():
         )
         db.session.add(o)
         db.session.commit()
+        flash('Officer assigned successfully', 'success')
         return redirect(url_for('officers.list_officers'))
     members = Member.query.filter_by(membership_status='active').order_by(Member.full_name).all()
-    return render_template('officers/form.html', members=members, ROLES=ROLES, DEPARTMENTS=DEPARTMENTS)
+    from datetime import datetime
+    return render_template('officers/form.html', members=members, ROLES=ROLES, DEPARTMENTS=DEPARTMENTS, current_date=datetime.now().strftime('%Y-%m-%d'))
+
+@officers_bp.route('/view/<int:id>')
+def view_officer(id):
+    o = ChurchOfficer.query.get_or_404(id)
+    return render_template('officers/view.html', officer=o)
 
 @officers_bp.route('/edit/<int:id>', methods=['GET', 'POST'])
 def edit_officer(id):
@@ -60,13 +67,16 @@ def edit_officer(id):
         o.end_date = request.form.get('end_date', '')
         o.active = request.form.get('active', 'true') == 'true'
         db.session.commit()
+        flash('Officer updated successfully', 'success')
         return redirect(url_for('officers.list_officers'))
     members = Member.query.filter_by(membership_status='active').order_by(Member.full_name).all()
-    return render_template('officers/form.html', officer=o, members=members, ROLES=ROLES, DEPARTMENTS=DEPARTMENTS)
+    from datetime import datetime
+    return render_template('officers/form.html', officer=o, members=members, ROLES=ROLES, DEPARTMENTS=DEPARTMENTS, current_date=datetime.now().strftime('%Y-%m-%d'))
 
 @officers_bp.route('/delete/<int:id>', methods=['POST'])
 def delete_officer(id):
     o = ChurchOfficer.query.get_or_404(id)
     db.session.delete(o)
     db.session.commit()
+    flash('Officer removed', 'warning')
     return redirect(url_for('officers.list_officers'))

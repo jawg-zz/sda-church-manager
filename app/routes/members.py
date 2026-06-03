@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for
+from flask import Blueprint, render_template, request, redirect, url_for, flash
 from app import db
 from models import Member
 
@@ -42,6 +42,7 @@ def add_member():
         )
         db.session.add(member)
         db.session.commit()
+        flash('Member added successfully', 'success')
         return redirect(url_for('members.list_members'))
     return render_template('members/form.html', member=None)
 
@@ -69,6 +70,7 @@ def edit_member(id):
         member.emergency_phone = request.form.get('emergency_phone', '')
         member.notes = request.form.get('notes', '')
         db.session.commit()
+        flash('Member updated successfully', 'success')
         return redirect(url_for('members.list_members'))
     return render_template('members/form.html', member=member)
 
@@ -82,4 +84,5 @@ def delete_member(id):
     member = Member.query.get_or_404(id)
     db.session.delete(member)
     db.session.commit()
+    flash('Member deleted', 'warning')
     return redirect(url_for('members.list_members'))

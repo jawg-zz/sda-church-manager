@@ -23,6 +23,8 @@
                                 <td>{{ t.date }}</td>
                                 <td>{{ t.period_month }}/{{ t.period_year }}</td>
                                 <td>
+                                    <a href="/finances/tithe/edit/{{ t.id }}" class="btn btn-sm btn-outline-primary me-1"><i class="bi bi-pencil"></i></a>
+                                    <a href="/finances/member/{{ t.member_id }}" class="btn btn-sm btn-outline-info me-1" title="Member Statement"><i class="bi bi-person"></i></a>
                                     <form action="/finances/tithe/delete/{{ t.id }}" method="post" class="d-inline" onsubmit="return confirm('Delete this tithe record?')">
                                         <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
                                     </form>
@@ -52,6 +54,8 @@
                                 <td class="text-success">KES {{ "{:,.0f}".format(o.amount) }}</td>
                                 <td>{{ o.date }}</td>
                                 <td>
+                                    <a href="/finances/offering/edit/{{ o.id }}" class="btn btn-sm btn-outline-primary me-1"><i class="bi bi-pencil"></i></a>
+                                    {% if o.member_id %}<a href="/finances/member/{{ o.member_id }}" class="btn btn-sm btn-outline-info me-1" title="Member Statement"><i class="bi bi-person"></i></a>{% endif %}
                                     <form action="/finances/offering/delete/{{ o.id }}" method="post" class="d-inline" onsubmit="return confirm('Delete this offering record?')">
                                         <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
                                     </form>

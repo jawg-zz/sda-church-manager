@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for
+from flask import Blueprint, render_template, request, redirect, url_for, flash
 from app import db
 from models import Event
 
@@ -31,8 +31,15 @@ def add_event():
         )
         db.session.add(e)
         db.session.commit()
+        flash('Event created successfully', 'success')
         return redirect(url_for('events.list_events'))
-    return render_template('events/form.html', event=None, EVENT_TYPES=EVENT_TYPES)
+    from datetime import datetime
+    return render_template('events/form.html', event=None, EVENT_TYPES=EVENT_TYPES, current_date=datetime.now().strftime('%Y-%m-%d'))
+
+@events_bp.route('/view/<int:id>')
+def view_event(id):
+    e = Event.query.get_or_404(id)
+    return render_template('events/view.html', event=e)
 
 @events_bp.route('/edit/<int:id>', methods=['GET', 'POST'])
 def edit_event(id):
@@ -46,12 +53,15 @@ def edit_event(id):
         e.description = request.form.get('description', '')
         e.organizer = request.form.get('organizer', '')
         db.session.commit()
+        flash('Event updated successfully', 'success')
         return redirect(url_for('events.list_events'))
-    return render_template('events/form.html', event=e, EVENT_TYPES=EVENT_TYPES)
+    from datetime import datetime
+    return render_template('events/form.html', event=e, EVENT_TYPES=EVENT_TYPES, current_date=datetime.now().strftime('%Y-%m-%d'))
 
 @events_bp.route('/delete/<int:id>', methods=['POST'])
 def delete_event(id):
     e = Event.query.get_or_404(id)
     db.session.delete(e)
     db.session.commit()
+    flash('Event deleted', 'warning')
     return redirect(url_for('events.list_events'))

@@ -21,6 +21,7 @@
                 {% if e.description %}<p class="small">{{ e.description }}</p>{% endif %}
                 {% if e.organizer %}<p class="text-secondary small"><i class="bi bi-person"></i> {{ e.organizer }}</p>{% endif %}
                 <div class="mt-2">
+                    <a href="/events/view/{{ e.id }}" class="btn btn-sm btn-outline-info" title="View"><i class="bi bi-eye"></i></a>
                     <a href="/events/edit/{{ e.id }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
                     <form action="/events/delete/{{ e.id }}" method="post" class="d-inline" onsubmit="return confirm('Delete this event?')">
                         <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>

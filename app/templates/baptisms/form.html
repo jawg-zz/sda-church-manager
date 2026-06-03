@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="page-header"><h1><i class="bi bi-droplet me-2"></i>Record Baptism</h1></div>
+<div class="page-header"><h1><i class="bi bi-droplet me-2"></i>{% if baptism %}Edit Baptism{% else %}Record Baptism{% endif %}</h1></div>
 <div class="card">
     <div class="card-body">
         <form method="post">
@@ -10,29 +10,29 @@
                     <select name="member_id" class="form-select" required>
                         <option value="">-- Select Member --</option>
                         {% for m in members %}
-                        <option value="{{ m.id }}">{{ m.full_name }}</option>
+                        <option value="{{ m.id }}" {% if baptism and baptism.member_id == m.id %}selected{% endif %}>{{ m.full_name }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Baptism Date *</label>
-                    <input type="date" name="baptism_date" class="form-control" required>
+                    <input type="date" name="baptism_date" class="form-control" required value="{{ baptism.baptism_date if baptism else current_date }}">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Certificate Number</label>
-                    <input type="text" name="certificate_number" class="form-control">
+                    <input type="text" name="certificate_number" class="form-control" value="{{ baptism.certificate_number if baptism else '' }}">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Baptizer</label>
-                    <input type="text" name="baptizer" class="form-control">
+                    <input type="text" name="baptizer" class="form-control" value="{{ baptism.baptizer if baptism else '' }}">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Location</label>
-                    <input type="text" name="location" class="form-control">
+                    <input type="text" name="location" class="form-control" value="{{ baptism.location if baptism else '' }}">
                 </div>
                 <div class="col-12">
                     <label class="form-label">Notes</label>
-                    <textarea name="notes" class="form-control" rows="2"></textarea>
+                    <textarea name="notes" class="form-control" rows="2">{{ baptism.notes if baptism else '' }}</textarea>
                 </div>
                 <div class="col-12">
                     <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Save</button>

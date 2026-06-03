@@ -23,6 +23,7 @@
                         <td>{{ o.end_date or 'Current' }}</td>
                         <td>{% if o.active %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-secondary">Former</span>{% endif %}</td>
                         <td>
+                            <a href="/officers/view/{{ o.id }}" class="btn btn-sm btn-outline-info" title="View"><i class="bi bi-eye"></i></a>
                             <a href="/officers/edit/{{ o.id }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
                             <form action="/officers/delete/{{ o.id }}" method="post" class="d-inline" onsubmit="return confirm('Remove this officer?')">
                                 <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>

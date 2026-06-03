@@ -18,6 +18,8 @@
                         <td>{{ b.baptizer or '-' }}</td>
                         <td>{{ b.certificate_number or '-' }}</td>
                         <td>
+                            <a href="/baptisms/view/{{ b.id }}" class="btn btn-sm btn-outline-info" title="View"><i class="bi bi-eye"></i></a>
+                            <a href="/baptisms/edit/{{ b.id }}" class="btn btn-sm btn-outline-primary" title="Edit"><i class="bi bi-pencil"></i></a>
                             <form action="/baptisms/delete/{{ b.id }}" method="post" class="d-inline" onsubmit="return confirm('Delete this baptism record?')">
                                 <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
                             </form>

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="page-header"><h1><i class="bi bi-coin me-2"></i>Record Tithe</h1></div>
+<div class="page-header"><h1><i class="bi bi-coin me-2"></i>{% if tithe %}Edit Tithe{% else %}Record Tithe{% endif %}</h1></div>
 <div class="card">
     <div class="card-body">
         <form method="post">
@@ -10,33 +10,33 @@
                     <select name="member_id" class="form-select" required>
                         <option value="">-- Select Member --</option>
                         {% for m in members %}
-                        <option value="{{ m.id }}">{{ m.full_name }}</option>
+                        <option value="{{ m.id }}" {% if tithe and tithe.member_id == m.id %}selected{% endif %}>{{ m.full_name }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Amount (KES) *</label>
-                    <input type="number" name="amount" class="form-control" step="0.01" min="0" required>
+                    <input type="number" name="amount" class="form-control" step="0.01" min="0" required value="{{ tithe.amount if tithe else '' }}">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Date *</label>
-                    <input type="date" name="date" class="form-control" required>
+                    <input type="date" name="date" class="form-control" required value="{{ tithe.date if tithe else '' }}">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Period Month *</label>
                     <select name="period_month" class="form-select" required>
                         {% for i in range(1,13) %}
-                        <option value="{{ i }}">{{ i }} - {{ ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][i-1] }}</option>
+                        <option value="{{ i }}" {% if tithe and tithe.period_month == i %}selected{% elif not tithe and current_month == i %}selected{% endif %}>{{ i }} - {{ ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][i-1] }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Period Year *</label>
-                    <input type="number" name="period_year" class="form-control" value="{{ __import__('datetime').datetime.now().year }}" required>
+                    <input type="number" name="period_year" class="form-control" value="{{ tithe.period_year if tithe else current_year }}" required>
                 </div>
                 <div class="col-12">
                     <label class="form-label">Notes</label>
-                    <textarea name="notes" class="form-control" rows="2"></textarea>
+                    <textarea name="notes" class="form-control" rows="2">{{ tithe.notes if tithe else '' }}</textarea>
                 </div>
                 <div class="col-12">
                     <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Save</button>

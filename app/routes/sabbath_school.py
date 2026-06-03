@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for
+from flask import Blueprint, render_template, request, redirect, url_for, flash
 from app import db
 from models import SabbathSchoolClass, SabbathSchoolAttendance, Member
 
@@ -19,6 +19,7 @@ def add_class():
         )
         db.session.add(c)
         db.session.commit()
+        flash('Class created successfully', 'success')
         return redirect(url_for('ss.dashboard'))
     return render_template('ss/class_form.html')
 
@@ -30,6 +31,7 @@ def edit_class(id):
         c.teacher = request.form.get('teacher', '')
         c.description = request.form.get('description', '')
         db.session.commit()
+        flash('Class updated successfully', 'success')
         return redirect(url_for('ss.dashboard'))
     return render_template('ss/class_form.html', cls=c)
 
@@ -38,6 +40,7 @@ def delete_class(id):
     c = SabbathSchoolClass.query.get_or_404(id)
     db.session.delete(c)
     db.session.commit()
+    flash('Class deleted', 'warning')
     return redirect(url_for('ss.dashboard'))
 
 @sabbath_school_bp.route('/attendance/<int:class_id>', methods=['GET', 'POST'])
@@ -57,11 +60,9 @@ def attendance(class_id):
             else:
                 db.session.add(SabbathSchoolAttendance(
                     class_id=class_id, member_id=m.id, date=date, present=present))
-        # Also add any non-member attendees
-        if request.form.get('guest_name'):
-            db.session.add(SabbathSchoolAttendance(
-                class_id=class_id, member_id=0, date=date, present=True))
+        # Guest attendees: only tracked if linked to an existing member
         db.session.commit()
+        flash('Attendance saved', 'success')
         return redirect(url_for('ss.view_attendance', class_id=class_id, date=date))
 
     members = Member.query.filter_by(membership_status='active').order_by(Member.full_name).all()

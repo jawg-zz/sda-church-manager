@@ -72,7 +72,7 @@ def logout():
 @login_required
 def switch_church(church_id):
     # Verify user has access to this church
-    if current_user.church_id and current_user.church_id != church_id:
+    if current_user.role != 'admin' and current_user.church_id and current_user.church_id != church_id:
         flash('You do not have access to this church', 'danger')
         return redirect('/dashboard')
     from models import Church

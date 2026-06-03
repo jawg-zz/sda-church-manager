@@ -36,10 +36,10 @@ def create_app():
         # Inject list of churches user can switch to
         churches_list = []
         if current_user.is_authenticated:
-            if current_user.church_id:
-                churches_list = Church.query.filter_by(id=current_user.church_id).all()
-            elif current_user.role == 'admin':
+            if current_user.role == 'admin':
                 churches_list = Church.query.order_by(Church.name).all()
+            elif current_user.church_id:
+                churches_list = Church.query.filter_by(id=current_user.church_id).all()
         return dict(current_church=church, user_churches=churches_list)
 
     # Security middleware: validate church_id on every request

@@ -204,6 +204,38 @@
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
+        .church-badge {
+            background: rgba(0,51,102,0.3);
+            border: 1px solid rgba(0,51,102,0.5);
+            color: #e5e7eb;
+            padding: 0.35rem 0.75rem;
+            border-radius: 2rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .church-badge i {
+            color: var(--sda-gold);
+        }
+        .sidebar-church-indicator {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            margin: 0 0.5rem 0.5rem;
+            background: rgba(0,51,102,0.15);
+            border: 1px solid rgba(0,51,102,0.3);
+            border-radius: 0.5rem;
+        }
+        .sidebar-church-indicator i {
+            font-size: 1.2rem;
+            margin-right: 0.5rem;
+        }
+        .sidebar-church-name {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #e5e7eb;
+            line-height: 1.2;
+        }
     </style>
 </head>
 <body>
@@ -212,6 +244,17 @@
             <a class="navbar-brand text-white" href="/">
                 <i class="bi bi-building me-2"></i>SDA Church Manager
             </a>
+            {% if current_user.is_authenticated and current_church %}
+            <div class="d-none d-lg-flex align-items-center me-auto ms-3">
+                <div class="church-badge">
+                    <i class="bi bi-building-fill me-1"></i>
+                    <span>{{ current_church.name }}</span>
+                    {% if current_church.location %}
+                    <small class="text-muted ms-1">· {{ current_church.location }}</small>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
             <div class="d-flex align-items-center">
                 {% if current_user.is_authenticated %}
                 {% if user_churches|length > 1 %}
@@ -268,6 +311,17 @@
         <!-- Sidebar -->
         <div class="collapse d-md-block sidebar" id="sidebarMenu" style="width: 240px; flex-shrink: 0;">
             <div class="py-2">
+                {% if current_church %}
+                <div class="sidebar-church-indicator">
+                    <i class="bi bi-building-fill text-primary"></i>
+                    <div>
+                        <div class="sidebar-church-name">{{ current_church.name }}</div>
+                        {% if current_church.location %}
+                        <small class="text-muted">{{ current_church.location }}</small>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
                 <div class="sidebar-section">Main</div>
                 <a class="nav-link {% if request.path == '/dashboard' %}active{% endif %}" href="/dashboard">
                     <i class="bi bi-speedometer2"></i> Dashboard

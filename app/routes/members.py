@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from flask_login import login_required, current_user
 from app import db
 from models import Member
@@ -8,11 +8,14 @@ members_bp = Blueprint('members', __name__, url_prefix='/members')
 @members_bp.route('/')
 @login_required
 def list_members():
+    cid = session.get('church_id')
+    if not cid:
+        return redirect('/auth/select-church')
     page = request.args.get('page', 1, type=int)
     per_page = 20
     status = request.args.get('status', 'all')
     search = request.args.get('search', '')
-    query = Member.query.order_by(Member.full_name)
+    query = Member.query.filter_by(church_id=cid).order_by(Member.full_name)
     if status != 'all':
         query = query.filter_by(membership_status=status)
     if search:
@@ -24,6 +27,9 @@ def list_members():
 @members_bp.route('/add', methods=['GET', 'POST'])
 @login_required
 def add_member():
+    cid = session.get('church_id')
+    if not cid:
+        return redirect('/auth/select-church')
     if request.method == 'POST':
         full_name = request.form.get('full_name', '').strip()
         if not full_name:
@@ -31,6 +37,7 @@ def add_member():
             return render_template('members/form.html', member=None)
         try:
             member = Member(
+                church_id=cid,
                 full_name=full_name,
                 date_of_birth=request.form.get('date_of_birth', ''),
                 gender=request.form.get('gender', ''),
@@ -63,7 +70,13 @@ def add_member():
 @members_bp.route('/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit_member(id):
-    member = Member.query.get_or_404(id)
+    cid = session.get('church_id')
+    if not cid:
+        return redirect('/auth/select-church')
+    member = Member.query.filter_by(id=id, church_id=cid).first()
+    if not member:
+        flash('Member not found', 'danger')
+        return redirect(url_for('members.list_members'))
     if request.method == 'POST':
         full_name = request.form.get('full_name', '').strip()
         if not full_name:
@@ -100,16 +113,28 @@ def edit_member(id):
 @members_bp.route('/view/<int:id>')
 @login_required
 def view_member(id):
-    member = Member.query.get_or_404(id)
+    cid = session.get('church_id')
+    if not cid:
+        return redirect('/auth/select-church')
+    member = Member.query.filter_by(id=id, church_id=cid).first()
+    if not member:
+        flash('Member not found', 'danger')
+        return redirect(url_for('members.list_members'))
     return render_template('members/view.html', member=member)
 
 @members_bp.route('/delete/<int:id>', methods=['POST'])
 @login_required
 def delete_member(id):
+    cid = session.get('church_id')
+    if not cid:
+        return redirect('/auth/select-church')
     if not current_user.can_delete:
         flash('Only admins can delete records', 'danger')
         return redirect(url_for('members.list_members'))
-    member = Member.query.get_or_404(id)
+    member = Member.query.filter_by(id=id, church_id=cid).first()
+    if not member:
+        flash('Member not found', 'danger')
+        return redirect(url_for('members.list_members'))
     try:
         db.session.delete(member)
         db.session.commit()

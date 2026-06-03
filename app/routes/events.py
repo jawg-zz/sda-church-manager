@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from flask_login import login_required, current_user
 from app import db
 from models import Event
@@ -17,8 +17,11 @@ EVENT_TYPES = [
 @events_bp.route('/')
 @login_required
 def list_events():
+    cid = session.get('church_id')
+    if not cid:
+        return redirect('/auth/select-church')
     page = request.args.get('page', 1, type=int)
-    pagination = Event.query.order_by(Event.date.desc()).paginate(
+    pagination = Event.query.filter_by(church_id=cid).order_by(Event.date.desc()).paginate(
         page=page, per_page=12, error_out=False)
     return render_template('events/list.html', events=pagination.items,
                            pagination=pagination, EVENT_TYPES=EVENT_TYPES)
@@ -26,6 +29,9 @@ def list_events():
 @events_bp.route('/add', methods=['GET', 'POST'])
 @login_required
 def add_event():
+    cid = session.get('church_id')
+    if not cid:
+        return redirect('/auth/select-church')
     if request.method == 'POST':
         title = request.form.get('title', '').strip()
         if not title:
@@ -34,6 +40,7 @@ def add_event():
                                   current_date=datetime.now().strftime('%Y-%m-%d'))
         try:
             e = Event(
+                church_id=cid,
                 title=title,
                 date=request.form['date'],
                 time=request.form.get('time', ''),
@@ -57,13 +64,25 @@ def add_event():
 @events_bp.route('/view/<int:id>')
 @login_required
 def view_event(id):
-    e = Event.query.get_or_404(id)
+    cid = session.get('church_id')
+    if not cid:
+        return redirect('/auth/select-church')
+    e = Event.query.filter_by(id=id, church_id=cid).first()
+    if not e:
+        flash('Event not found', 'danger')
+        return redirect(url_for('events.list_events'))
     return render_template('events/view.html', event=e)
 
 @events_bp.route('/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit_event(id):
-    e = Event.query.get_or_404(id)
+    cid = session.get('church_id')
+    if not cid:
+        return redirect('/auth/select-church')
+    e = Event.query.filter_by(id=id, church_id=cid).first()
+    if not e:
+        flash('Event not found', 'danger')
+        return redirect(url_for('events.list_events'))
     if request.method == 'POST':
         title = request.form.get('title', '').strip()
         if not title:
@@ -92,10 +111,16 @@ def edit_event(id):
 @events_bp.route('/delete/<int:id>', methods=['POST'])
 @login_required
 def delete_event(id):
+    cid = session.get('church_id')
+    if not cid:
+        return redirect('/auth/select-church')
     if not current_user.can_delete:
         flash('Only admins can delete records', 'danger')
         return redirect(url_for('events.list_events'))
-    e = Event.query.get_or_404(id)
+    e = Event.query.filter_by(id=id, church_id=cid).first()
+    if not e:
+        flash('Event not found', 'danger')
+        return redirect(url_for('events.list_events'))
     try:
         db.session.delete(e)
         db.session.commit()

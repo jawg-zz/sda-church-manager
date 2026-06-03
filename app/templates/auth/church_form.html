@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header"><h1><i class="bi bi-building me-2"></i>{% if church %}Edit Church{% else %}Add Church{% endif %}</h1></div>
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Church Name *</label>
+                    <input type="text" name="name" class="form-control" required value="{{ church.name if church else '' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Location</label>
+                    <input type="text" name="location" class="form-control" value="{{ church.location if church else '' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">District</label>
+                    <input type="text" name="district" class="form-control" value="{{ church.district if church else '' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Region</label>
+                    <input type="text" name="region" class="form-control" value="{{ church.region if church else '' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Phone</label>
+                    <input type="text" name="phone" class="form-control" value="{{ church.phone if church else '' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" class="form-control" value="{{ church.email if church else '' }}">
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Save</button>
+                    <a href="/auth/churches" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

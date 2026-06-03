@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="text-center mb-4"><i class="bi bi-building me-2"></i>Select Church</h3>
+                {% if churches %}
+                <form method="post">
+                    <div class="mb-3">
+                        <label class="form-label">Choose a church</label>
+                        <select name="church_id" class="form-select" required>
+                            <option value="">-- Select --</option>
+                            {% for c in churches %}
+                            <option value="{{ c.id }}">{{ c.name }}{% if c.location %} — {{ c.location }}{% endif %}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Continue</button>
+                </form>
+                {% else %}
+                <div class="text-center text-secondary py-4">
+                    <p>No churches found. Create one first.</p>
+                    <a href="/auth/churches/add" class="btn btn-primary">Add Church</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

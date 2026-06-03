@@ -1,6 +1,7 @@
 from app import db
 from datetime import datetime
 from flask_login import UserMixin
+from flask import session
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
@@ -12,14 +13,39 @@ ROLES = {
 }
 
 
+def current_church_id():
+    return session.get('church_id')
+
+
+class Church(db.Model):
+    __tablename__ = 'churches'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    location = db.Column(db.String(200))
+    district = db.Column(db.String(100))
+    region = db.Column(db.String(100))
+    phone = db.Column(db.String(20))
+    email = db.Column(db.String(100))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    users = db.relationship('User', backref='church', lazy=True)
+    members = db.relationship('Member', backref='church', lazy=True)
+
+    def __repr__(self):
+        return f'<Church {self.name}>'
+
+
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
+    username = db.Column(db.String(80), nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     role = db.Column(db.String(20), default='clerk')
-    department = db.Column(db.String(100))  # for dept_head role
+    department = db.Column(db.String(100))
+    church_id = db.Column(db.Integer, db.ForeignKey('churches.id'), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    __table_args__ = (db.UniqueConstraint('username', 'church_id', name='uq_user_church'),)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -54,9 +80,11 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return f'<User {self.username}>'
 
+
 class Member(db.Model):
     __tablename__ = 'members'
     id = db.Column(db.Integer, primary_key=True)
+    church_id = db.Column(db.Integer, db.ForeignKey('churches.id'), nullable=False, index=True)
     full_name = db.Column(db.String(200), nullable=False)
     date_of_birth = db.Column(db.String(20))
     gender = db.Column(db.String(10))
@@ -103,6 +131,7 @@ class Member(db.Model):
 class TitheRecord(db.Model):
     __tablename__ = 'tithes'
     id = db.Column(db.Integer, primary_key=True)
+    church_id = db.Column(db.Integer, db.ForeignKey('churches.id'), nullable=False, index=True)
     member_id = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=False)
     amount = db.Column(db.Float, nullable=False)
     date = db.Column(db.String(20), nullable=False)
@@ -115,6 +144,7 @@ class TitheRecord(db.Model):
 class Offering(db.Model):
     __tablename__ = 'offerings'
     id = db.Column(db.Integer, primary_key=True)
+    church_id = db.Column(db.Integer, db.ForeignKey('churches.id'), nullable=False, index=True)
     member_id = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=True)
     amount = db.Column(db.Float, nullable=False)
     date = db.Column(db.String(20), nullable=False)
@@ -126,6 +156,7 @@ class Offering(db.Model):
 class SabbathSchoolClass(db.Model):
     __tablename__ = 'ss_classes'
     id = db.Column(db.Integer, primary_key=True)
+    church_id = db.Column(db.Integer, db.ForeignKey('churches.id'), nullable=False, index=True)
     name = db.Column(db.String(200), nullable=False)
     teacher = db.Column(db.String(200))
     description = db.Column(db.Text)
@@ -148,6 +179,7 @@ class SabbathSchoolAttendance(db.Model):
 class Baptism(db.Model):
     __tablename__ = 'baptisms'
     id = db.Column(db.Integer, primary_key=True)
+    church_id = db.Column(db.Integer, db.ForeignKey('churches.id'), nullable=False, index=True)
     member_id = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=False)
     baptism_date = db.Column(db.String(20), nullable=False)
     baptizer = db.Column(db.String(200))
@@ -162,6 +194,7 @@ class Baptism(db.Model):
 class ChurchOfficer(db.Model):
     __tablename__ = 'officers'
     id = db.Column(db.Integer, primary_key=True)
+    church_id = db.Column(db.Integer, db.ForeignKey('churches.id'), nullable=False, index=True)
     member_id = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=False)
     role = db.Column(db.String(100), nullable=False)
     department = db.Column(db.String(100))
@@ -176,6 +209,7 @@ class ChurchOfficer(db.Model):
 class Event(db.Model):
     __tablename__ = 'events'
     id = db.Column(db.Integer, primary_key=True)
+    church_id = db.Column(db.Integer, db.ForeignKey('churches.id'), nullable=False, index=True)
     title = db.Column(db.String(200), nullable=False)
     date = db.Column(db.String(20), nullable=False)
     time = db.Column(db.String(20))

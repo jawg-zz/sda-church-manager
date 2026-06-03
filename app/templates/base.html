@@ -165,6 +165,11 @@
             </a>
             <div class="d-flex align-items-center">
                 {% if current_user.is_authenticated %}
+                {% if current_church %}
+                <span class="text-secondary me-2 d-none d-md-inline">
+                    <i class="bi bi-building me-1"></i>{{ current_church.name }}
+                </span>
+                {% endif %}
                 <span class="text-secondary me-3 d-none d-md-inline">
                     <i class="bi bi-person-circle me-1"></i>{{ current_user.username }}
                     <small class="text-muted">({{ current_user.role_name }})</small>
@@ -221,6 +226,9 @@
                 <div class="sidebar-section">Administration</div>
                 <a class="nav-link {% if request.path.startswith('/auth/users') %}active{% endif %}" href="/auth/users">
                     <i class="bi bi-people-gear"></i> Users
+                </a>
+                <a class="nav-link {% if request.path.startswith('/auth/churches') %}active{% endif %}" href="/auth/churches">
+                    <i class="bi bi-building"></i> Churches
                 </a>
                 {% endif %}
                 <div class="sidebar-section">Account</div>

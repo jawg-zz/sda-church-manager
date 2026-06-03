@@ -1,7 +1,7 @@
 import os
-from flask import Flask, redirect, render_template, jsonify, request
+from flask import Flask, redirect, render_template, jsonify, request, session
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, login_required
+from flask_login import LoginManager, login_required, current_user
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -25,25 +25,36 @@ def create_app():
         from models import User
         return User.query.get(int(user_id))
 
+    @app.context_processor
+    def inject_church():
+        from models import Church
+        cid = session.get('church_id')
+        church = Church.query.get(cid) if cid else None
+        return dict(current_church=church)
+
     # Lazy table creation on first request (avoids gunicorn worker race condition)
     @app.before_request
     def ensure_tables():
         global _db_initialized
         if not _db_initialized:
-            from models import Member, TitheRecord, Offering, SabbathSchoolClass, \
-                SabbathSchoolAttendance, Baptism, ChurchOfficer, Event, User
+            from models import (Member, TitheRecord, Offering, SabbathSchoolClass,
+                SabbathSchoolAttendance, Baptism, ChurchOfficer, Event, User, Church)
             with app.app_context():
                 db.create_all()
-                # Create default users if none exist
-                if User.query.count() == 0:
+                # Create default church and users if none exist
+                if Church.query.count() == 0:
+                    church = Church(name='SDA Central Church', location='Nairobi',
+                                    district='Nairobi Central', region='Central Kenya')
+                    db.session.add(church)
+                    db.session.flush()
                     defaults = [
-                        ('admin', 'admin', 'admin', None),
-                        ('pastor', 'pastor', 'pastor', None),
-                        ('clerk', 'clerk', 'clerk', None),
-                        ('ss_head', 'ss123', 'dept_head', 'Sabbath School'),
+                        ('admin', 'admin', 'admin', None, church.id),
+                        ('pastor', 'pastor', 'pastor', None, church.id),
+                        ('clerk', 'clerk', 'clerk', None, church.id),
+                        ('ss_head', 'ss123', 'dept_head', 'Sabbath School', church.id),
                     ]
-                    for username, password, role, dept in defaults:
-                        u = User(username=username, role=role, department=dept)
+                    for username, password, role, dept, cid in defaults:
+                        u = User(username=username, role=role, department=dept, church_id=cid)
                         u.set_password(password)
                         db.session.add(u)
                     db.session.commit()
@@ -79,42 +90,48 @@ def create_app():
         from sqlalchemy import func
         from models import Member, TitheRecord, Offering, Baptism, ChurchOfficer, SabbathSchoolClass, Event
         from datetime import datetime
+        cid = session.get('church_id')
+        if not cid:
+            return redirect('/auth/select-church')
         now = datetime.now()
         year = now.year
         month = now.month
 
-        total_members = Member.query.filter_by(membership_status='active').count()
+        total_members = Member.query.filter_by(church_id=cid, membership_status='active').count()
         total_tithes = db.session.query(func.sum(TitheRecord.amount)) \
-            .filter(TitheRecord.date >= f'{year}-01-01',
+            .filter(TitheRecord.church_id == cid,
+                    TitheRecord.date >= f'{year}-01-01',
                     TitheRecord.date <= f'{year}-12-31').scalar() or 0
         total_baptisms = Baptism.query.filter(
+            Baptism.church_id == cid,
             Baptism.baptism_date >= f'{year}-01-01').count()
-        active_officers = ChurchOfficer.query.filter_by(
-            active=True).count()
-        classes = SabbathSchoolClass.query.count()
+        active_officers = ChurchOfficer.query.filter_by(church_id=cid, active=True).count()
+        classes = SabbathSchoolClass.query.filter_by(church_id=cid).count()
         new_members_this_month = Member.query.filter(
+            Member.church_id == cid,
             Member.join_date >= f'{year}-{month:02d}-01').count()
         upcoming_events = Event.query.filter(
+            Event.church_id == cid,
             Event.date >= now.strftime('%Y-%m-%d')
         ).order_by(Event.date).limit(5).all()
 
-        # Monthly tithe data for chart
         monthly_tithes = []
         monthly_offerings = []
         for m in range(1, 13):
             t = db.session.query(func.sum(TitheRecord.amount)) \
-                .filter(TitheRecord.period_year == year,
+                .filter(TitheRecord.church_id == cid,
+                        TitheRecord.period_year == year,
                         TitheRecord.period_month == m).scalar() or 0
             o = db.session.query(func.sum(Offering.amount)) \
-                .filter(Offering.date >= f'{year}-{m:02d}-01',
+                .filter(Offering.church_id == cid,
+                        Offering.date >= f'{year}-{m:02d}-01',
                         Offering.date <= f'{year}-{m:02d}-31').scalar() or 0
             monthly_tithes.append(float(t))
             monthly_offerings.append(float(o))
 
-        # Recent activity
-        recent_members = Member.query.order_by(Member.created_at.desc()).limit(5).all()
-        recent_baptisms = Baptism.query.order_by(Baptism.created_at.desc()).limit(5).all()
-        recent_tithes = TitheRecord.query.order_by(TitheRecord.created_at.desc()).limit(5).all()
+        recent_members = Member.query.filter_by(church_id=cid).order_by(Member.created_at.desc()).limit(5).all()
+        recent_baptisms = Baptism.query.filter_by(church_id=cid).order_by(Baptism.created_at.desc()).limit(5).all()
+        recent_tithes = TitheRecord.query.filter_by(church_id=cid).order_by(TitheRecord.created_at.desc()).limit(5).all()
 
         return render_template('dashboard.html',
             total_members=total_members,

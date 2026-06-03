@@ -1,4 +1,23 @@
 services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: church_manager
+      POSTGRES_USER: sda
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sda_password}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sda -d church_manager"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "256M"
+
   app:
     build:
       context: .
@@ -8,8 +27,11 @@ services:
     environment:
       - TZ=Africa/Nairobi
       - FLASK_ENV=production
-      - DATABASE_URL=sqlite:///church.db
+      - DATABASE_URL=postgresql://sda:${POSTGRES_PASSWORD:-sda_password}@db:5432/church_manager
       - SECRET_KEY=${SECRET_KEY:-change-this-in-production}
+    depends_on:
+      db:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:5000/health"]
       interval: 30s
@@ -27,3 +49,6 @@ services:
       restart_policy:
         condition: unless-stopped
         delay: 5s
+
+volumes:
+  pgdata:

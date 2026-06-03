@@ -1,8 +1,8 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
-from flask_login import login_user, logout_user, login_required, current_user
-from functools import wraps
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from flask_login import login_required, login_user, logout_user, current_user
 from app import db
-from models import User, ROLES
+from models import User, Church, ROLES
+from functools import wraps
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -28,6 +28,13 @@ def login():
         user = User.query.filter_by(username=username).first()
         if user and user.check_password(password):
             login_user(user)
+            # Auto-select church if user belongs to only one
+            churches = Church.query.filter_by(id=user.church_id).all() if user.church_id else []
+            if len(churches) == 1:
+                session['church_id'] = churches[0].id
+            elif user.role == 'admin' and not user.church_id:
+                # Super admin - no church assigned yet
+                pass
             flash('Logged in successfully', 'success')
             next_page = request.args.get('next')
             return redirect(next_page or '/dashboard')
@@ -35,9 +42,27 @@ def login():
     return render_template('auth/login.html')
 
 
+@auth_bp.route('/select-church', methods=['GET', 'POST'])
+@login_required
+def select_church():
+    if current_user.church_id:
+        session['church_id'] = current_user.church_id
+        return redirect('/dashboard')
+    # Admin without church - show all churches
+    churches = Church.query.order_by(Church.name).all()
+    if request.method == 'POST':
+        church_id = request.form.get('church_id', type=int)
+        if church_id:
+            session['church_id'] = church_id
+            return redirect('/dashboard')
+        flash('Select a church', 'warning')
+    return render_template('auth/select_church.html', churches=churches)
+
+
 @auth_bp.route('/logout')
 @login_required
 def logout():
+    session.pop('church_id', None)
     logout_user()
     flash('Logged out', 'warning')
     return redirect(url_for('auth.login'))
@@ -46,7 +71,7 @@ def logout():
 @auth_bp.route('/users')
 @admin_required
 def list_users():
-    users = User.query.order_by(User.username).all()
+    users = User.query.filter_by(church_id=session.get('church_id')).order_by(User.username).all()
     return render_template('auth/users.html', users=users, ROLES=ROLES)
 
 
@@ -58,17 +83,18 @@ def add_user():
         password = request.form.get('password', '')
         role = request.form.get('role', 'clerk')
         department = request.form.get('department', '').strip()
+        cid = session.get('church_id')
         if not username or not password:
             flash('Username and password are required', 'danger')
         elif len(password) < 4:
             flash('Password must be at least 4 characters', 'danger')
-        elif User.query.filter_by(username=username).first():
-            flash('Username already exists', 'danger')
+        elif User.query.filter_by(username=username, church_id=cid).first():
+            flash('Username already exists in this church', 'danger')
         elif role not in ROLES:
             flash('Invalid role', 'danger')
         else:
             try:
-                user = User(username=username, role=role, department=department or None)
+                user = User(username=username, role=role, department=department or None, church_id=cid)
                 user.set_password(password)
                 db.session.add(user)
                 db.session.commit()
@@ -84,6 +110,9 @@ def add_user():
 @admin_required
 def edit_user(id):
     user = User.query.get_or_404(id)
+    if user.church_id != session.get('church_id'):
+        flash('Access denied', 'danger')
+        return redirect(url_for('auth.list_users'))
     if request.method == 'POST':
         role = request.form.get('role', user.role)
         department = request.form.get('department', '').strip()
@@ -125,6 +154,61 @@ def delete_user(id):
     return redirect(url_for('auth.list_users'))
 
 
+@auth_bp.route('/churches')
+@admin_required
+def list_churches():
+    churches = Church.query.order_by(Church.name).all()
+    return render_template('auth/churches.html', churches=churches)
+
+
+@auth_bp.route('/churches/add', methods=['GET', 'POST'])
+@admin_required
+def add_church():
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        if not name:
+            flash('Church name is required', 'danger')
+        else:
+            try:
+                church = Church(
+                    name=name,
+                    location=request.form.get('location', ''),
+                    district=request.form.get('district', ''),
+                    region=request.form.get('region', ''),
+                    phone=request.form.get('phone', ''),
+                    email=request.form.get('email', ''),
+                )
+                db.session.add(church)
+                db.session.commit()
+                flash(f'Church "{name}" created', 'success')
+                return redirect(url_for('auth.list_churches'))
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error: {str(e)}', 'danger')
+    return render_template('auth/church_form.html', church=None)
+
+
+@auth_bp.route('/churches/edit/<int:id>', methods=['GET', 'POST'])
+@admin_required
+def edit_church(id):
+    church = Church.query.get_or_404(id)
+    if request.method == 'POST':
+        church.name = request.form.get('name', church.name)
+        church.location = request.form.get('location', '')
+        church.district = request.form.get('district', '')
+        church.region = request.form.get('region', '')
+        church.phone = request.form.get('phone', '')
+        church.email = request.form.get('email', '')
+        try:
+            db.session.commit()
+            flash('Church updated', 'success')
+            return redirect(url_for('auth.list_churches'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error: {str(e)}', 'danger')
+    return render_template('auth/church_form.html', church=church)
+
+
 @auth_bp.route('/change-password', methods=['GET', 'POST'])
 @login_required
 def change_password():
@@ -146,5 +230,5 @@ def change_password():
                 return redirect('/dashboard')
             except Exception as e:
                 db.session.rollback()
-                flash(f'Error changing password: {str(e)}', 'danger')
+                flash(f'Error: {str(e)}', 'danger')
     return render_template('auth/change_password.html')

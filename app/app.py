@@ -3,21 +3,28 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
+_db_initialized = False
 
 def create_app():
     app = Flask(__name__)
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
-        'DATABASE_URL', 'sqlite:///church.db'
+        'DATABASE_URL', 'sqlite:///app/data/church.db'
     )
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-change-in-prod')
 
     db.init_app(app)
 
-    with app.app_context():
-        from models import Member, TitheRecord, Offering, SabbathSchoolClass, \
-            SabbathSchoolAttendance, Baptism, ChurchOfficer, Event
-        db.create_all()
+    # Lazy table creation on first request (avoids gunicorn worker race condition)
+    @app.before_request
+    def ensure_tables():
+        global _db_initialized
+        if not _db_initialized:
+            from models import Member, TitheRecord, Offering, SabbathSchoolClass, \
+                SabbathSchoolAttendance, Baptism, ChurchOfficer, Event
+            with app.app_context():
+                db.create_all()
+            _db_initialized = True
 
     # Register blueprints
     from routes.members import members_bp

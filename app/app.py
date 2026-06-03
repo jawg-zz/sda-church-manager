@@ -53,7 +53,9 @@ def create_app():
     def dashboard():
         from flask import render_template
         from sqlalchemy import func
-        now = __import__('datetime').datetime.now()
+        from models import Member, TitheRecord, Baptism, ChurchOfficer, SabbathSchoolClass, Event
+        from datetime import datetime
+        now = datetime.now()
         year = now.year
         month = now.month
 

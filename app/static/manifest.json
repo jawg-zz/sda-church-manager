@@ -1,0 +1,22 @@
+{
+  "name": "SDA Church Manager",
+  "short_name": "SDA Church",
+  "description": "Church management system for Seventh-day Adventist churches",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#0a0e1a",
+  "theme_color": "#003366",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/static/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

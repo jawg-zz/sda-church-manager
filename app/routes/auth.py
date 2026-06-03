@@ -315,3 +315,64 @@ def audit_log():
     return render_template('auth/audit_log.html', logs=pagination.items,
         pagination=pagination, users=users, action_filter=action_filter,
         entity_filter=entity_filter)
+
+
+@auth_bp.route('/api/sync', methods=['POST'])
+@login_required
+def sync_offline():
+    """Accept batch of offline records and process them."""
+    cid = session.get('church_id')
+    if not cid:
+        return jsonify({'error': 'No church selected'}), 400
+    from models import Member, TitheRecord, Offering, Baptism, Event, log_audit
+    from flask import jsonify
+    data = request.get_json(silent=True) or request.form
+    items = data.get('items', []) if isinstance(data, dict) else []
+    if not items:
+        return jsonify({'error': 'No items'}), 400
+    created = 0
+    errors = []
+    for item in items:
+        try:
+            url = item.get('url', '')
+            payload = item.get('payload', {})
+            if '/members/add' in url:
+                m = Member(church_id=cid, full_name=payload.get('full_name', ''),
+                    phone=payload.get('phone', ''), email=payload.get('email', ''),
+                    gender=payload.get('gender', ''), membership_status=payload.get('membership_status', 'active'))
+                db.session.add(m)
+                db.session.flush()
+                log_audit(cid, current_user.id, 'create', 'member', m.id, f'Offline sync: {m.full_name}')
+            elif '/tithe/add' in url:
+                t = TitheRecord(church_id=cid, member_id=int(payload.get('member_id', 0)),
+                    amount=float(payload.get('amount', 0)), date=payload.get('date', ''),
+                    period_month=int(payload.get('period_month', 1)), period_year=int(payload.get('period_year', 2026)))
+                db.session.add(t)
+                db.session.flush()
+                log_audit(cid, current_user.id, 'create', 'tithe', t.id, 'Offline sync tithe')
+            elif '/offering/add' in url:
+                o = Offering(church_id=cid, member_id=int(payload.get('member_id', 0)) or None,
+                    amount=float(payload.get('amount', 0)), date=payload.get('date', ''),
+                    category=payload.get('category', 'General'))
+                db.session.add(o)
+                db.session.flush()
+                log_audit(cid, current_user.id, 'create', 'offering', o.id, 'Offline sync offering')
+            elif '/baptisms/add' in url:
+                b = Baptism(church_id=cid, member_id=int(payload.get('member_id', 0)),
+                    baptism_date=payload.get('baptism_date', ''), baptizer=payload.get('baptizer', ''),
+                    location=payload.get('location', ''))
+                db.session.add(b)
+                db.session.flush()
+                log_audit(cid, current_user.id, 'create', 'baptism', b.id, 'Offline sync baptism')
+            elif '/events/add' in url:
+                e = Event(church_id=cid, title=payload.get('title', ''),
+                    date=payload.get('date', ''), time=payload.get('time', ''),
+                    location=payload.get('location', ''), event_type=payload.get('event_type', ''))
+                db.session.add(e)
+                db.session.flush()
+                log_audit(cid, current_user.id, 'create', 'event', e.id, 'Offline sync event')
+            created += 1
+        except Exception as ex:
+            errors.append(str(ex))
+    db.session.commit()
+    return jsonify({'created': created, 'errors': errors})

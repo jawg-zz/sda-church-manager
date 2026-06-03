@@ -1,6 +1,8 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask_login import login_required
 from app import db
 from models import ChurchOfficer, Member
+from datetime import datetime
 
 officers_bp = Blueprint('officers', __name__, url_prefix='/officers')
 
@@ -18,65 +20,88 @@ ROLES = [
 
 DEPARTMENTS = [
     'General', 'Sabbath School', 'Youth', 'Children\'s Ministries',
-    'Music', 'Communications', 'Personal Ministries',
-    'Health Ministries', 'Women\'s Ministries', 'Men\'s Ministries',
-    'Stewardship', 'Education', 'Publishing'
+    'Music', 'Communications', 'Personal Ministries', 'Health Ministries',
+    'Women\'s Ministries', 'Men\'s Ministries', 'Stewardship', 'Education', 'Publishing'
 ]
 
 @officers_bp.route('/')
+@login_required
 def list_officers():
+    page = request.args.get('page', 1, type=int)
     active = request.args.get('active', 'true')
     query = ChurchOfficer.query
     if active == 'true':
         query = query.filter_by(active=True)
-    officers = query.order_by(ChurchOfficer.role).all()
-    return render_template('officers/list.html', officers=officers, ROLES=ROLES)
+    pagination = query.order_by(ChurchOfficer.role).paginate(
+        page=page, per_page=20, error_out=False)
+    return render_template('officers/list.html', officers=pagination.items,
+                           pagination=pagination, ROLES=ROLES)
 
 @officers_bp.route('/add', methods=['GET', 'POST'])
+@login_required
 def add_officer():
     if request.method == 'POST':
-        o = ChurchOfficer(
-            member_id=request.form['member_id'],
-            role=request.form['role'],
-            department=request.form.get('department', ''),
-            start_date=request.form['start_date'],
-            end_date=request.form.get('end_date', ''),
-            active=request.form.get('active', 'true') == 'true',
-        )
-        db.session.add(o)
-        db.session.commit()
-        flash('Officer assigned successfully', 'success')
-        return redirect(url_for('officers.list_officers'))
+        try:
+            o = ChurchOfficer(
+                member_id=request.form['member_id'],
+                role=request.form['role'],
+                department=request.form.get('department', ''),
+                start_date=request.form['start_date'],
+                end_date=request.form.get('end_date', ''),
+                active=request.form.get('active', 'true') == 'true',
+            )
+            db.session.add(o)
+            db.session.commit()
+            flash('Officer assigned successfully', 'success')
+            return redirect(url_for('officers.list_officers'))
+        except (ValueError, KeyError) as e:
+            flash(f'Invalid input: {str(e)}', 'danger')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error assigning officer: {str(e)}', 'danger')
     members = Member.query.filter_by(membership_status='active').order_by(Member.full_name).all()
-    from datetime import datetime
-    return render_template('officers/form.html', members=members, ROLES=ROLES, DEPARTMENTS=DEPARTMENTS, current_date=datetime.now().strftime('%Y-%m-%d'))
+    return render_template('officers/form.html', members=members, ROLES=ROLES,
+                           DEPARTMENTS=DEPARTMENTS, current_date=datetime.now().strftime('%Y-%m-%d'))
 
 @officers_bp.route('/view/<int:id>')
+@login_required
 def view_officer(id):
     o = ChurchOfficer.query.get_or_404(id)
     return render_template('officers/view.html', officer=o)
 
 @officers_bp.route('/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
 def edit_officer(id):
     o = ChurchOfficer.query.get_or_404(id)
     if request.method == 'POST':
-        o.member_id = request.form['member_id']
-        o.role = request.form['role']
-        o.department = request.form.get('department', '')
-        o.start_date = request.form['start_date']
-        o.end_date = request.form.get('end_date', '')
-        o.active = request.form.get('active', 'true') == 'true'
-        db.session.commit()
-        flash('Officer updated successfully', 'success')
-        return redirect(url_for('officers.list_officers'))
+        try:
+            o.member_id = request.form['member_id']
+            o.role = request.form['role']
+            o.department = request.form.get('department', '')
+            o.start_date = request.form['start_date']
+            o.end_date = request.form.get('end_date', '')
+            o.active = request.form.get('active', 'true') == 'true'
+            db.session.commit()
+            flash('Officer updated successfully', 'success')
+            return redirect(url_for('officers.list_officers'))
+        except (ValueError, KeyError) as e:
+            flash(f'Invalid input: {str(e)}', 'danger')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating officer: {str(e)}', 'danger')
     members = Member.query.filter_by(membership_status='active').order_by(Member.full_name).all()
-    from datetime import datetime
-    return render_template('officers/form.html', officer=o, members=members, ROLES=ROLES, DEPARTMENTS=DEPARTMENTS, current_date=datetime.now().strftime('%Y-%m-%d'))
+    return render_template('officers/form.html', officer=o, members=members, ROLES=ROLES,
+                           DEPARTMENTS=DEPARTMENTS, current_date=datetime.now().strftime('%Y-%m-%d'))
 
 @officers_bp.route('/delete/<int:id>', methods=['POST'])
+@login_required
 def delete_officer(id):
     o = ChurchOfficer.query.get_or_404(id)
-    db.session.delete(o)
-    db.session.commit()
-    flash('Officer removed', 'warning')
+    try:
+        db.session.delete(o)
+        db.session.commit()
+        flash('Officer removed', 'warning')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error removing officer: {str(e)}', 'danger')
     return redirect(url_for('officers.list_officers'))

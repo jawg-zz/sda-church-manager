@@ -16,7 +16,7 @@
                     <table class="table table-dark table-hover mb-0">
                         <thead><tr><th>Member</th><th>Amount</th><th>Date</th><th>Period</th><th></th></tr></thead>
                         <tbody>
-                            {% for t in tithes %}
+                            {% for t in tithes.items %}
                             <tr>
                                 <td>{{ t.member.full_name }}</td>
                                 <td class="text-success">KES {{ "{:,.0f}".format(t.amount) }}</td>
@@ -37,6 +37,7 @@
                     </table>
                 </div>
             </div>
+            {{ render_pagination(tithes, "finances.dashboard", page_o=1) }}
         </div>
     </div>
     <div class="col-md-6">
@@ -47,7 +48,7 @@
                     <table class="table table-dark table-hover mb-0">
                         <thead><tr><th>Member</th><th>Category</th><th>Amount</th><th>Date</th><th></th></tr></thead>
                         <tbody>
-                            {% for o in offerings %}
+                            {% for o in offerings.items %}
                             <tr>
                                 <td>{{ o.member.full_name if o.member else 'Anonymous' }}</td>
                                 <td><span class="badge bg-info bg-opacity-10 text-info">{{ o.category }}</span></td>
@@ -68,6 +69,7 @@
                     </table>
                 </div>
             </div>
+            {{ render_pagination(offerings, "finances.dashboard", page_t=1) }}
         </div>
     </div>
 </div>

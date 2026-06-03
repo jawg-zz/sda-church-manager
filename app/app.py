@@ -1,8 +1,10 @@
 import os
-from flask import Flask
+from flask import Flask, redirect, render_template, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, login_required
 
 db = SQLAlchemy()
+login_manager = LoginManager()
 _db_initialized = False
 
 def create_app():
@@ -14,6 +16,14 @@ def create_app():
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-change-in-prod')
 
     db.init_app(app)
+    login_manager.init_app(app)
+    login_manager.login_view = 'auth.login'
+    login_manager.login_message_category = 'warning'
+
+    @login_manager.user_loader
+    def load_user(user_id):
+        from models import User
+        return User.query.get(int(user_id))
 
     # Lazy table creation on first request (avoids gunicorn worker race condition)
     @app.before_request
@@ -21,12 +31,19 @@ def create_app():
         global _db_initialized
         if not _db_initialized:
             from models import Member, TitheRecord, Offering, SabbathSchoolClass, \
-                SabbathSchoolAttendance, Baptism, ChurchOfficer, Event
+                SabbathSchoolAttendance, Baptism, ChurchOfficer, Event, User
             with app.app_context():
                 db.create_all()
+                # Create default admin user if none exists
+                if User.query.count() == 0:
+                    admin = User(username='admin', role='admin')
+                    admin.set_password('admin')
+                    db.session.add(admin)
+                    db.session.commit()
             _db_initialized = True
 
     # Register blueprints
+    from routes.auth import auth_bp
     from routes.members import members_bp
     from routes.finances import finances_bp
     from routes.sabbath_school import sabbath_school_bp
@@ -35,6 +52,7 @@ def create_app():
     from routes.events import events_bp
     from routes.reports import reports_bp
 
+    app.register_blueprint(auth_bp)
     app.register_blueprint(members_bp)
     app.register_blueprint(finances_bp)
     app.register_blueprint(sabbath_school_bp)
@@ -46,14 +64,13 @@ def create_app():
     # Main routes
     @app.route('/')
     def index():
-        from flask import redirect
         return redirect('/dashboard')
 
     @app.route('/dashboard')
+    @login_required
     def dashboard():
-        from flask import render_template
         from sqlalchemy import func
-        from models import Member, TitheRecord, Baptism, ChurchOfficer, SabbathSchoolClass, Event
+        from models import Member, TitheRecord, Offering, Baptism, ChurchOfficer, SabbathSchoolClass, Event
         from datetime import datetime
         now = datetime.now()
         year = now.year
@@ -74,6 +91,24 @@ def create_app():
             Event.date >= now.strftime('%Y-%m-%d')
         ).order_by(Event.date).limit(5).all()
 
+        # Monthly tithe data for chart
+        monthly_tithes = []
+        monthly_offerings = []
+        for m in range(1, 13):
+            t = db.session.query(func.sum(TitheRecord.amount)) \
+                .filter(TitheRecord.period_year == year,
+                        TitheRecord.period_month == m).scalar() or 0
+            o = db.session.query(func.sum(Offering.amount)) \
+                .filter(Offering.date >= f'{year}-{m:02d}-01',
+                        Offering.date <= f'{year}-{m:02d}-31').scalar() or 0
+            monthly_tithes.append(float(t))
+            monthly_offerings.append(float(o))
+
+        # Recent activity
+        recent_members = Member.query.order_by(Member.created_at.desc()).limit(5).all()
+        recent_baptisms = Baptism.query.order_by(Baptism.created_at.desc()).limit(5).all()
+        recent_tithes = TitheRecord.query.order_by(TitheRecord.created_at.desc()).limit(5).all()
+
         return render_template('dashboard.html',
             total_members=total_members,
             total_tithes=total_tithes,
@@ -82,11 +117,15 @@ def create_app():
             classes=classes,
             new_members_this_month=new_members_this_month,
             upcoming_events=upcoming_events,
+            monthly_tithes=monthly_tithes,
+            monthly_offerings=monthly_offerings,
+            recent_members=recent_members,
+            recent_baptisms=recent_baptisms,
+            recent_tithes=recent_tithes,
             year=year)
 
     @app.route('/health')
     def health():
-        from flask import jsonify
         return jsonify({"status": "ok", "app": "sda-church-manager"})
 
     return app

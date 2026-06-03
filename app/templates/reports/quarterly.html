@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+    <h1><i class="bi bi-file-text me-2"></i>Quarterly Statistical Returns</h1>
+    <form method="get" class="d-flex align-items-center gap-2">
+        <select name="year" class="form-select form-select-sm" style="width: auto;" onchange="this.form.submit()">
+            {% for y in range(2020, 2031) %}
+            <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+        </select>
+        <select name="quarter" class="form-select form-select-sm" style="width: auto;" onchange="this.form.submit()">
+            {% for q in [1,2,3,4] %}
+            <option value="{{ q }}" {% if q == quarter %}selected{% endif %}>Q{{ q }}</option>
+            {% endfor %}
+        </select>
+    </form>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="mb-0">{{ total_members }}</h2>
+                <small class="text-secondary">Total Members</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="mb-0 text-success">{{ new_members }}</h2>
+                <small class="text-secondary">New Members</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="mb-0 text-info">{{ baptisms_q }}</h2>
+                <small class="text-secondary">Baptisms</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="mb-0">{{ active_officers }}</h2>
+                <small class="text-secondary">Active Officers</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-cash-coin me-2"></i>Financial Summary</div>
+            <div class="card-body">
+                <table class="table table-dark table-borderless mb-0">
+                    <tr><td class="text-secondary">Total Tithes</td><td class="text-end text-success">KES {{ "{:,.0f}".format(total_tithe) }}</td></tr>
+                    <tr><td class="text-secondary">Total Offerings</td><td class="text-end text-info">KES {{ "{:,.0f}".format(total_offering) }}</td></tr>
+                    <tr class="border-top border-secondary"><td><strong>Combined</strong></td><td class="text-end"><strong>KES {{ "{:,.0f}".format(total_tithe + total_offering) }}</strong></td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-book me-2"></i>Sabbath School & Events</div>
+            <div class="card-body">
+                <table class="table table-dark table-borderless mb-0">
+                    <tr><td class="text-secondary">SS Classes</td><td class="text-end">{{ ss_classes }}</td></tr>
+                    <tr><td class="text-secondary">Active SS Members</td><td class="text-end">{{ ss_members }}</td></tr>
+                    <tr><td class="text-secondary">Events Held</td><td class="text-end">{{ events_q }}</td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><i class="bi bi-info-circle me-2"></i>Quarter {{ quarter }} ({{ ['January','February','March','April','May','June','July','August','September','October','November','December'][months[0]-1] }} - {{ ['January','February','March','April','May','June','July','August','September','October','November','December'][months[-1]-1] }} {{ year }})</div>
+    <div class="card-body text-secondary">
+        <p>This report summarizes key statistics for SDA Quarterly Statistical Returns. Use the year and quarter selectors above to view different periods.</p>
+        <p class="mb-0"><strong>Note:</strong> This is an auto-generated summary. Cross-check figures with manual records before submitting to the conference.</p>
+    </div>
+</div>
+{% endblock %}

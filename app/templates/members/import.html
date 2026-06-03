@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+    <h1><i class="bi bi-upload me-2"></i>Import Members</h1>
+    <a href="/members" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Back</a>
+</div>
+
+{% if not preview %}
+<div class="row g-3">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-info-circle me-2"></i>How to Import</div>
+            <div class="card-body">
+                <p>Upload a CSV file with member data. The first row should contain column headers.</p>
+                <h6>Supported Fields:</h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <ul class="list-unstyled text-secondary small">
+                            <li><code>full_name</code> <span class="text-danger">*</span></li>
+                            <li><code>phone</code></li>
+                            <li><code>email</code></li>
+                            <li><code>gender</code></li>
+                            <li><code>date_of_birth</code> (YYYY-MM-DD)</li>
+                            <li><code>membership_status</code></li>
+                            <li><code>join_date</code> (YYYY-MM-DD)</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul class="list-unstyled text-secondary small">
+                            <li><code>tribe</code></li>
+                            <li><code>language</code></li>
+                            <li><code>occupation</code></li>
+                            <li><code>address</code></li>
+                            <li><code>emergency_contact</code></li>
+                            <li><code>emergency_phone</code></li>
+                            <li><code>notes</code></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="alert alert-info mt-3 mb-0">
+                    <i class="bi bi-lightbulb me-1"></i>
+                    <strong>Tip:</strong> Export your existing spreadsheet as CSV. The importer will try to match column names automatically.
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-upload me-2"></i>Upload CSV</div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <input type="file" name="csv_file" class="form-control" accept=".csv" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-eye me-1"></i> Preview Import
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-table me-2"></i>Preview — {{ total }} members found</span>
+        <span class="badge bg-info">{{ preview|length }} shown</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover table-sm mb-0">
+                <thead>
+                    <tr>
+                        {% for h in headers %}
+                        <th>{{ h }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in preview %}
+                    <tr>
+                        {% for h in headers %}
+                        <td>{{ row.get(h, '') }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="d-flex gap-2">
+    <form method="post" enctype="multipart/form-data">
+        <input type="hidden" name="confirm" value="yes">
+        <input type="hidden" name="csv_file" value="">
+        <button type="submit" class="btn btn-success">
+            <i class="bi bi-check-lg me-1"></i> Import {{ total }} Members
+        </button>
+    </form>
+    <a href="/members/import" class="btn btn-outline-secondary">Cancel</a>
+</div>
+{% endif %}
+{% endblock %}

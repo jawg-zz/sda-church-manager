@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from flask_login import login_required
+from flask_login import login_required, current_user
 from app import db
 from models import Member, TitheRecord, Offering, Baptism, ChurchOfficer, SabbathSchoolClass, SabbathSchoolAttendance, Event
 from sqlalchemy import func

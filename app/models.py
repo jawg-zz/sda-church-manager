@@ -4,12 +4,21 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
+ROLES = {
+    'admin': 'Admin',
+    'pastor': 'Pastor',
+    'clerk': 'Clerk',
+    'dept_head': 'Department Head',
+}
+
+
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
-    role = db.Column(db.String(20), default='user')  # admin, user
+    role = db.Column(db.String(20), default='clerk')
+    department = db.Column(db.String(100))  # for dept_head role
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def set_password(self, password):
@@ -17,6 +26,30 @@ class User(UserMixin, db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+    @property
+    def role_name(self):
+        return ROLES.get(self.role, self.role)
+
+    @property
+    def can_delete(self):
+        return self.role in ('admin',)
+
+    @property
+    def can_manage_users(self):
+        return self.role == 'admin'
+
+    @property
+    def can_view_finances(self):
+        return self.role in ('admin', 'pastor', 'clerk')
+
+    @property
+    def can_manage_members(self):
+        return self.role in ('admin', 'pastor', 'clerk')
+
+    @property
+    def can_manage_departments(self):
+        return self.role in ('admin', 'pastor', 'dept_head')
 
     def __repr__(self):
         return f'<User {self.username}>'

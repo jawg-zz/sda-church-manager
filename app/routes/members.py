@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from flask_login import login_required
+from flask_login import login_required, current_user
 from app import db
 from models import Member
 
@@ -106,6 +106,9 @@ def view_member(id):
 @members_bp.route('/delete/<int:id>', methods=['POST'])
 @login_required
 def delete_member(id):
+    if not current_user.can_delete:
+        flash('Only admins can delete records', 'danger')
+        return redirect(url_for('members.list_members'))
     member = Member.query.get_or_404(id)
     try:
         db.session.delete(member)

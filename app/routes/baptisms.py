@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from flask_login import login_required
+from flask_login import login_required, current_user
 from app import db
 from models import Baptism, Member
 from datetime import datetime
@@ -79,6 +79,9 @@ def edit_baptism(id):
 @baptisms_bp.route('/delete/<int:id>', methods=['POST'])
 @login_required
 def delete_baptism(id):
+    if not current_user.can_delete:
+        flash('Only admins can delete records', 'danger')
+        return redirect(url_for('baptisms.list_baptisms'))
     b = Baptism.query.get_or_404(id)
     try:
         db.session.delete(b)

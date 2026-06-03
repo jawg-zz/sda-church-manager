@@ -167,6 +167,7 @@
                 {% if current_user.is_authenticated %}
                 <span class="text-secondary me-3 d-none d-md-inline">
                     <i class="bi bi-person-circle me-1"></i>{{ current_user.username }}
+                    <small class="text-muted">({{ current_user.role_name }})</small>
                 </span>
                 <a href="/auth/logout" class="btn btn-outline-secondary btn-sm">Logout</a>
                 {% else %}
@@ -191,16 +192,20 @@
                 <a class="nav-link {% if request.path.startswith('/members') %}active{% endif %}" href="/members">
                     <i class="bi bi-people"></i> Members
                 </a>
+                {% if current_user.can_manage_departments %}
                 <a class="nav-link {% if request.path.startswith('/officers') %}active{% endif %}" href="/officers">
                     <i class="bi bi-person-badge"></i> Officers
                 </a>
+                {% endif %}
                 <a class="nav-link {% if request.path.startswith('/baptisms') %}active{% endif %}" href="/baptisms">
                     <i class="bi bi-droplet"></i> Baptisms
                 </a>
+                {% if current_user.can_view_finances %}
                 <div class="sidebar-section">Finance</div>
                 <a class="nav-link {% if request.path.startswith('/finances') %}active{% endif %}" href="/finances">
                     <i class="bi bi-cash-coin"></i> Tithes & Offerings
                 </a>
+                {% endif %}
                 <div class="sidebar-section">Ministries</div>
                 <a class="nav-link {% if request.path.startswith('/sabbath-school') %}active{% endif %}" href="/sabbath-school">
                     <i class="bi bi-book"></i> Sabbath School
@@ -211,6 +216,16 @@
                 <div class="sidebar-section">Reports</div>
                 <a class="nav-link {% if request.path.startswith('/reports') %}active{% endif %}" href="/reports">
                     <i class="bi bi-graph-up"></i> Reports
+                </a>
+                {% if current_user.can_manage_users %}
+                <div class="sidebar-section">Administration</div>
+                <a class="nav-link {% if request.path.startswith('/auth/users') %}active{% endif %}" href="/auth/users">
+                    <i class="bi bi-people-gear"></i> Users
+                </a>
+                {% endif %}
+                <div class="sidebar-section">Account</div>
+                <a class="nav-link {% if request.path == '/auth/change-password' %}active{% endif %}" href="/auth/change-password">
+                    <i class="bi bi-key"></i> Change Password
                 </a>
             </div>
         </div>

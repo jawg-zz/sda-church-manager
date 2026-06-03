@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from flask_login import login_required
+from flask_login import login_required, current_user
 from app import db
 from models import Member, TitheRecord, Offering
 from datetime import datetime
@@ -84,6 +84,9 @@ def edit_tithe(id):
 @finances_bp.route('/tithe/delete/<int:id>', methods=['POST'])
 @login_required
 def delete_tithe(id):
+    if not current_user.can_delete:
+        flash('Only admins can delete records', 'danger')
+        return redirect(url_for('finances.dashboard'))
     t = TitheRecord.query.get_or_404(id)
     try:
         db.session.delete(t)
@@ -145,6 +148,9 @@ def edit_offering(id):
 @finances_bp.route('/offering/delete/<int:id>', methods=['POST'])
 @login_required
 def delete_offering(id):
+    if not current_user.can_delete:
+        flash('Only admins can delete records', 'danger')
+        return redirect(url_for('finances.dashboard'))
     o = Offering.query.get_or_404(id)
     try:
         db.session.delete(o)

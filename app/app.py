@@ -34,11 +34,18 @@ def create_app():
                 SabbathSchoolAttendance, Baptism, ChurchOfficer, Event, User
             with app.app_context():
                 db.create_all()
-                # Create default admin user if none exists
+                # Create default users if none exist
                 if User.query.count() == 0:
-                    admin = User(username='admin', role='admin')
-                    admin.set_password('admin')
-                    db.session.add(admin)
+                    defaults = [
+                        ('admin', 'admin', 'admin', None),
+                        ('pastor', 'pastor', 'pastor', None),
+                        ('clerk', 'clerk', 'clerk', None),
+                        ('ss_head', 'ss123', 'dept_head', 'Sabbath School'),
+                    ]
+                    for username, password, role, dept in defaults:
+                        u = User(username=username, role=role, department=dept)
+                        u.set_password(password)
+                        db.session.add(u)
                     db.session.commit()
             _db_initialized = True
 

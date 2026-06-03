@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from flask_login import login_required
+from flask_login import login_required, current_user
 from app import db
 from models import SabbathSchoolClass, SabbathSchoolAttendance, Member
 
@@ -58,6 +58,9 @@ def edit_class(id):
 @sabbath_school_bp.route('/class/delete/<int:id>', methods=['POST'])
 @login_required
 def delete_class(id):
+    if not current_user.can_delete:
+        flash('Only admins can delete records', 'danger')
+        return redirect(url_for('ss.dashboard'))
     c = SabbathSchoolClass.query.get_or_404(id)
     try:
         db.session.delete(c)

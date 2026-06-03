@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from flask_login import login_required
+from flask_login import login_required, current_user
 from app import db
 from models import Event
 from datetime import datetime
@@ -92,6 +92,9 @@ def edit_event(id):
 @events_bp.route('/delete/<int:id>', methods=['POST'])
 @login_required
 def delete_event(id):
+    if not current_user.can_delete:
+        flash('Only admins can delete records', 'danger')
+        return redirect(url_for('events.list_events'))
     e = Event.query.get_or_404(id)
     try:
         db.session.delete(e)

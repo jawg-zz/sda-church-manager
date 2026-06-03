@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header"><h1><i class="bi bi-person-plus me-2"></i>{% if user %}Edit User{% else %}Add User{% endif %}</h1></div>
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Username *</label>
+                    <input type="text" name="username" class="form-control" required {% if user %}value="{{ user.username }}" readonly{% endif %}>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">{% if user %}New Password (leave blank to keep){% else %}Password *{% endif %}</label>
+                    <input type="password" name="password" class="form-control" {% if not user %}required{% endif %} minlength="4">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Role *</label>
+                    <select name="role" class="form-select" required>
+                        {% for key, name in ROLES.items() %}
+                        <option value="{{ key }}" {% if user and user.role == key %}selected{% endif %}>{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Department (for Dept Head)</label>
+                    <select name="department" class="form-select">
+                        <option value="">-- None --</option>
+                        {% for dept in ['Sabbath School', 'Youth', 'Children\'s Ministries', 'Music', 'Communications', 'Personal Ministries', 'Health Ministries', 'Women\'s Ministries', 'Men\'s Ministries', 'Stewardship', 'Education'] %}
+                        <option value="{{ dept }}" {% if user and user.department == dept %}selected{% endif %}>{{ dept }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Save</button>
+                    <a href="/auth/users" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

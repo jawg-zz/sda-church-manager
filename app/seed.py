@@ -69,10 +69,8 @@ def _rand_date(year, month=None):
     return date(year, m, d)
 
 
-def seed_demo_data(db, models):
-    """Seed the database with realistic demo data."""
-    Church = models['Church']
-    User = models['User']
+def seed_church_data(db, models, church):
+    """Seed demo data for a single church."""
     Member = models['Member']
     TitheRecord = models['TitheRecord']
     Offering = models['Offering']
@@ -81,6 +79,126 @@ def seed_demo_data(db, models):
     SabbathSchoolClass = models['SabbathSchoolClass']
     SabbathSchoolAttendance = models['SabbathSchoolAttendance']
     Event = models['Event']
+
+    church_members = []
+    num_members = random.randint(45, 80)
+    for _ in range(num_members):
+        gender = random.choice(['M', 'F'])
+        first = random.choice(FIRST_NAMES_M if gender == 'M' else FIRST_NAMES_F)
+        last = random.choice(LAST_NAMES)
+        year = random.randint(1950, 2005)
+        month = random.randint(1, 12)
+        member = Member(
+            church_id=church.id,
+            full_name=f'{first} {last}',
+            date_of_birth=f'{year}-{month:02d}-{random.randint(1,28):02d}',
+            gender=gender,
+            phone=f'+254{random.randint(700000000, 799999999)}',
+            email=f'{first.lower()}.{last.lower()}@example.com',
+            address=f'P.O. Box {random.randint(100, 9999)} {random.choice(LOCATIONS)}',
+            membership_status=random.choice(['active']*8 + ['inactive', 'transferred']),
+            baptism_date=f'{random.randint(2010, 2025)}-{random.randint(1,12):02d}-{random.randint(1,28):02d}',
+            baptism_location=f'{church.location} SDA Church',
+            baptism_by='Pastor John Mwangi',
+            join_date=f'{random.randint(2015, 2025)}-{random.randint(1,12):02d}-{random.randint(1,28):02d}',
+            transfer_from=random.choice(['', '', '', f'SDA {random.choice(LOCATIONS)}']),
+            tribe=random.choice(TRIBES),
+            language=random.choice(LANGUAGES),
+            occupation=random.choice(OCCUPATIONS),
+            education_level=random.choice(EDUCATION),
+            emergency_contact=f'{random.choice(FIRST_NAMES_M)} {random.choice(LAST_NAMES)}',
+            emergency_phone=f'+254{random.randint(700000000, 799999999)}',
+        )
+        db.session.add(member)
+        church_members.append(member)
+    db.session.flush()
+
+    # Tithes
+    for member in church_members:
+        if member.membership_status != 'active':
+            continue
+        num_tithes = random.randint(3, 12)
+        for _ in range(num_tithes):
+            m = random.randint(1, 12)
+            y = random.choice([2024, 2025, 2026])
+            t = TitheRecord(
+                church_id=church.id, member_id=member.id,
+                amount=round(random.uniform(500, 15000), 2),
+                date=f'{y}-{m:02d}-{random.randint(1,28):02d}',
+                period_month=m, period_year=y,
+                notes=random.choice(['', '', 'Monthly tithe', 'Weekly tithe'])
+            )
+            db.session.add(t)
+
+    # Offerings
+    for _ in range(random.randint(20, 40)):
+        m = random.randint(1, 12)
+        y = random.choice([2024, 2025, 2026])
+        member = random.choice(church_members) if random.random() > 0.3 else None
+        o = Offering(
+            church_id=church.id, member_id=member.id if member else None,
+            amount=round(random.uniform(200, 5000), 2),
+            date=f'{y}-{m:02d}-{random.randint(1,28):02d}',
+            category=random.choice(OFFERING_CATEGORIES),
+            notes=random.choice(['', '', 'Sabbath offering'])
+        )
+        db.session.add(o)
+
+    # Baptisms
+    for _ in range(random.randint(3, 8)):
+        member = random.choice(church_members)
+        b = Baptism(
+            church_id=church.id, member_id=member.id,
+            baptism_date=f'{random.randint(2020, 2025)}-{random.randint(1,12):02d}-{random.randint(1,28):02d}',
+            baptizer=random.choice(['Pastor John Mwangi', 'Pastor David Ochieng', 'Elder Peter Kamau']),
+            location=f'{church.location} SDA Church',
+            certificate_number=f'SDA-{random.randint(1000, 9999)}'
+        )
+        db.session.add(b)
+
+    # Officers
+    officer_members = random.sample(church_members, min(6, len(church_members)))
+    for i, member in enumerate(officer_members):
+        o = ChurchOfficer(
+            church_id=church.id, member_id=member.id,
+            role=ROLES[i % len(ROLES)],
+            department=random.choice(['General', 'Sabbath School', 'Youth', 'Music', 'Personal Ministries']),
+            start_date=f'{random.randint(2020, 2025)}-01-01',
+            active=random.random() > 0.2
+        )
+        db.session.add(o)
+
+    # SS classes
+    for cls_name in random.sample(SS_CLASSES, random.randint(3, 5)):
+        ss = SabbathSchoolClass(
+            church_id=church.id, name=cls_name,
+            teacher=f'{random.choice(FIRST_NAMES_M)} {random.choice(LAST_NAMES)}',
+            description=f'{cls_name} class for the church'
+        )
+        db.session.add(ss)
+    db.session.flush()
+
+    # Events
+    for _ in range(random.randint(5, 10)):
+        e = Event(
+            church_id=church.id,
+            title=random.choice(['Divine Service', 'Youth Rally', 'Health Sabbath',
+                'Prayer Night', 'Community Outreach', 'Baptismal Service',
+                'Church Board Meeting', 'Choir Practice', 'Bible Study']),
+            date=f'{random.randint(2025, 2026)}-{random.randint(1,12):02d}-{random.randint(1,28):02d}',
+            time=random.choice(['08:00', '09:00', '10:00', '14:00', '18:00']),
+            location=f'{church.location} SDA Church',
+            event_type=random.choice(EVENT_TYPES),
+            description=f'Annual {random.choice(["spiritual", "youth", "health", "outreach"])} program',
+            organizer=f'{random.choice(FIRST_NAMES_M)} {random.choice(LAST_NAMES)}'
+        )
+        db.session.add(e)
+
+
+def seed_demo_data(db, models):
+    """Seed the database with realistic demo data."""
+    Church = models['Church']
+    User = models['User']
 
     # Create 3 demo churches
     churches = []
@@ -104,134 +222,14 @@ def seed_demo_data(db, models):
             u.set_password(password)
             db.session.add(u)
 
-    # Create members for each church
-    all_members = []
+    # Seed data for each church
     for church in churches:
-        church_members = []
-        num_members = random.randint(45, 80)
-        for _ in range(num_members):
-            gender = random.choice(['M', 'F'])
-            first = random.choice(FIRST_NAMES_M if gender == 'M' else FIRST_NAMES_F)
-            last = random.choice(LAST_NAMES)
-            year = random.randint(1950, 2005)
-            month = random.randint(1, 12)
-            member = Member(
-                church_id=church.id,
-                full_name=f'{first} {last}',
-                date_of_birth=f'{year}-{month:02d}-{random.randint(1,28):02d}',
-                gender=gender,
-                phone=f'+254{random.randint(700000000, 799999999)}',
-                email=f'{first.lower()}.{last.lower()}@example.com',
-                address=f'P.O. Box {random.randint(100, 9999)} {random.choice(LOCATIONS)}',
-                membership_status=random.choice(['active']*8 + ['inactive', 'transferred']),
-                baptism_date=f'{random.randint(2010, 2025)}-{random.randint(1,12):02d}-{random.randint(1,28):02d}',
-                baptism_location=f'{church.location} SDA Church',
-                baptism_by='Pastor John Mwangi',
-                join_date=f'{random.randint(2015, 2025)}-{random.randint(1,12):02d}-{random.randint(1,28):02d}',
-                transfer_from=random.choice(['', '', '', f'SDA {random.choice(LOCATIONS)}']),
-                tribe=random.choice(TRIBES),
-                language=random.choice(LANGUAGES),
-                occupation=random.choice(OCCUPATIONS),
-                education_level=random.choice(EDUCATION),
-                emergency_contact=f'{random.choice(FIRST_NAMES_M)} {random.choice(LAST_NAMES)}',
-                emergency_phone=f'+254{random.randint(700000000, 799999999)}',
-            )
-            db.session.add(member)
-            church_members.append(member)
-        all_members.extend(church_members)
-        db.session.flush()
-
-        # Create tithes for each member
-        for member in church_members:
-            if member.membership_status != 'active':
-                continue
-            num_tithes = random.randint(3, 12)
-            for _ in range(num_tithes):
-                m = random.randint(1, 12)
-                y = random.choice([2024, 2025, 2026])
-                t = TitheRecord(
-                    church_id=church.id,
-                    member_id=member.id,
-                    amount=round(random.uniform(500, 15000), 2),
-                    date=f'{y}-{m:02d}-{random.randint(1,28):02d}',
-                    period_month=m,
-                    period_year=y,
-                    notes=random.choice(['', '', 'Monthly tithe', 'Weekly tithe'])
-                )
-                db.session.add(t)
-
-        # Create offerings
-        for _ in range(random.randint(20, 40)):
-            m = random.randint(1, 12)
-            y = random.choice([2024, 2025, 2026])
-            member = random.choice(church_members) if random.random() > 0.3 else None
-            o = Offering(
-                church_id=church.id,
-                member_id=member.id if member else None,
-                amount=round(random.uniform(200, 5000), 2),
-                date=f'{y}-{m:02d}-{random.randint(1,28):02d}',
-                category=random.choice(OFFERING_CATEGORIES),
-                notes=random.choice(['', '', 'Sabbath offering'])
-            )
-            db.session.add(o)
-
-        # Create baptisms
-        for _ in range(random.randint(3, 8)):
-            member = random.choice(church_members)
-            b = Baptism(
-                church_id=church.id,
-                member_id=member.id,
-                baptism_date=f'{random.randint(2020, 2025)}-{random.randint(1,12):02d}-{random.randint(1,28):02d}',
-                baptizer=random.choice(['Pastor John Mwangi', 'Pastor David Ochieng', 'Elder Peter Kamau']),
-                location=f'{church.location} SDA Church',
-                certificate_number=f'SDA-{random.randint(1000, 9999)}'
-            )
-            db.session.add(b)
-
-        # Create officers
-        officer_members = random.sample(church_members, min(6, len(church_members)))
-        for i, member in enumerate(officer_members):
-            o = ChurchOfficer(
-                church_id=church.id,
-                member_id=member.id,
-                role=ROLES[i % len(ROLES)],
-                department=random.choice(['General', 'Sabbath School', 'Youth', 'Music', 'Personal Ministries']),
-                start_date=f'{random.randint(2020, 2025)}-01-01',
-                active=random.random() > 0.2
-            )
-            db.session.add(o)
-
-        # Create SS classes
-        for cls_name in random.sample(SS_CLASSES, random.randint(3, 5)):
-            ss = SabbathSchoolClass(
-                church_id=church.id,
-                name=cls_name,
-                teacher=f'{random.choice(FIRST_NAMES_M)} {random.choice(LAST_NAMES)}',
-                description=f'{cls_name} class for the church'
-            )
-            db.session.add(ss)
-        db.session.flush()
-
-        # Create events
-        for _ in range(random.randint(5, 10)):
-            e = Event(
-                church_id=church.id,
-                title=random.choice(['Divine Service', 'Youth Rally', 'Health Sabbath',
-                    'Prayer Night', 'Community Outreach', 'Baptismal Service',
-                    'Church Board Meeting', 'Choir Practice', 'Bible Study']),
-                date=f'{random.randint(2025, 2026)}-{random.randint(1,12):02d}-{random.randint(1,28):02d}',
-                time=random.choice(['08:00', '09:00', '10:00', '14:00', '18:00']),
-                location=f'{church.location} SDA Church',
-                event_type=random.choice(EVENT_TYPES),
-                description=f'Annual {random.choice(["spiritual", "youth", "health", "outreach"])} program',
-                organizer=f'{random.choice(FIRST_NAMES_M)} {random.choice(LAST_NAMES)}'
-            )
-            db.session.add(e)
+        seed_church_data(db, models, church)
 
     db.session.commit()
-    total_members = Member.query.count()
-    total_tithes = TitheRecord.query.count()
-    total_offerings = Offering.query.count()
+    total_members = models['Member'].query.count()
+    total_tithes = models['TitheRecord'].query.count()
+    total_offerings = models['Offering'].query.count()
     return {
         'churches': len(churches),
         'members': total_members,

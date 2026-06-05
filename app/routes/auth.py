@@ -108,10 +108,11 @@ def logout():
 @auth_bp.route('/switch-church/<int:church_id>')
 @login_required
 def switch_church(church_id):
-    # Verify user has access to this church
-    if current_user.role != 'admin' and current_user.church_id and current_user.church_id != church_id:
-        flash('You do not have access to this church', 'danger')
+    # Users with a fixed church_id cannot switch
+    if current_user.church_id:
+        flash('You only have access to your own church', 'danger')
         return redirect('/dashboard')
+    # Super admins (no church_id) can switch between churches
     from models import Church
     church = Church.query.get(church_id)
     if not church:

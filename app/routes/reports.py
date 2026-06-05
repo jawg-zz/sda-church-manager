@@ -202,7 +202,12 @@ def conference_report():
     if not current_user.can_manage_users:
         flash('Admin access required', 'danger')
         return redirect(url_for('reports.index'))
-    churches = Church.query.order_by(Church.name).all()
+    cid = session.get('church_id')
+    # Users with a fixed church_id only see their own church
+    if current_user.church_id:
+        churches = Church.query.filter_by(id=cid).all()
+    else:
+        churches = Church.query.order_by(Church.name).all()
     church_stats = []
     totals = {'active_members': 0, 'total_tithes': 0.0, 'total_offerings': 0.0, 'total_baptisms': 0}
     for c in churches:

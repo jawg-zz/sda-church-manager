@@ -223,7 +223,7 @@ class Event(db.Model):
 class AuditLog(db.Model):
     __tablename__ = 'audit_log'
     id = db.Column(db.Integer, primary_key=True)
-    church_id = db.Column(db.Integer, db.ForeignKey('churches.id'), nullable=False, index=True)
+    church_id = db.Column(db.Integer, db.ForeignKey('churches.id'), nullable=True, index=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     action = db.Column(db.String(20), nullable=False)
     entity = db.Column(db.String(50), nullable=False)

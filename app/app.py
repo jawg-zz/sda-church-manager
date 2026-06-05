@@ -79,6 +79,14 @@ def create_app():
                 SabbathSchoolAttendance, Baptism, ChurchOfficer, Event, User, Church, AuditLog)
             with app.app_context():
                 db.create_all()
+                # Allow null church_id in audit_log for superadmin actions
+                try:
+                    db.session.execute(db.text(
+                        "ALTER TABLE audit_log ALTER COLUMN church_id DROP NOT NULL"
+                    ))
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()  # already nullable or noop
                 demo_mode = os.environ.get('DEMO_MODE', 'false').lower() == 'true'
                 if Church.query.count() == 0:
                     if demo_mode:

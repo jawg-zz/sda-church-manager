@@ -43,6 +43,33 @@ def login():
     return render_template('auth/login.html')
 
 
+@auth_bp.route('/register', methods=['GET', 'POST'])
+def register():
+    if current_user.is_authenticated:
+        return redirect('/dashboard')
+    if request.method == 'POST':
+        church_name = request.form.get('church_name', '').strip()
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
+        if not church_name or not username or not password:
+            flash('All fields are required', 'danger')
+            return render_template('auth/register.html')
+        if User.query.filter_by(username=username).first():
+            flash('Username already taken', 'danger')
+            return render_template('auth/register.html')
+        church = Church(name=church_name)
+        db.session.add(church)
+        db.session.flush()
+        user = User(username=username, role='admin', church_id=church.id)
+        user.set_password(password)
+        db.session.add(user)
+        db.session.commit()
+        log_audit(church.id, user.id, 'register', 'church', church.id, f'Church {church_name} registered by {username}')
+        flash('Registration successful! Please log in.', 'success')
+        return redirect(url_for('auth.login'))
+    return render_template('auth/register.html')
+
+
 @auth_bp.route('/select-church', methods=['GET', 'POST'])
 @login_required
 def select_church():

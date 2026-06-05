@@ -106,6 +106,12 @@ def create_app():
                             u.set_password(password)
                             db.session.add(u)
                         db.session.commit()
+            # Ensure super admin exists (runs every restart, idempotent)
+            if not User.query.filter_by(username='superadmin', church_id=None).first():
+                u = User(username='superadmin', role='admin', church_id=None)
+                u.set_password('superadmin')
+                db.session.add(u)
+                db.session.commit()
             _db_initialized = True
 
     # Register blueprints

@@ -65,6 +65,15 @@ def register():
         db.session.add(user)
         db.session.commit()
         log_audit(church.id, user.id, 'register', 'church', church.id, f'Church {church_name} registered by {username}')
+        # Seed demo data for the new church
+        from seed import seed_church_data
+        from models import Member, TitheRecord, Offering, Baptism, ChurchOfficer, SabbathSchoolClass, SabbathSchoolAttendance, Event
+        models = {'Member': Member, 'TitheRecord': TitheRecord, 'Offering': Offering,
+                  'Baptism': Baptism, 'ChurchOfficer': ChurchOfficer,
+                  'SabbathSchoolClass': SabbathSchoolClass,
+                  'SabbathSchoolAttendance': SabbathSchoolAttendance, 'Event': Event}
+        seed_church_data(db, models, church)
+        db.session.commit()
         flash('Registration successful! Please log in.', 'success')
         return redirect(url_for('auth.login'))
     return render_template('auth/register.html')

@@ -4,21 +4,21 @@
     <div class="col-md-4">
         <div class="card">
             <div class="card-body">
-                <h3 class="text-center mb-4"><i class="bi bi-building me-2"></i>Create Account</h3>
+                <h3 class="text-center mb-4"><i class="bi bi-building me-2"></i>SDA Church Manager</h3>
                 <form method="post">
                     <div class="mb-3">
-                        <label class="form-label">Username</label>
-                        <input type="text" name="username" class="form-control" required autofocus>
+                        <label class="form-label">Church Name</label>
+                        <input type="text" name="church_name" class="form-control" required autofocus placeholder="e.g. Nairobi Central SDA">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Admin Username</label>
+                        <input type="text" name="username" class="form-control" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Password</label>
-                        <input type="password" name="password" class="form-control" required minlength="4">
+                        <input type="password" name="password" class="form-control" required>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Confirm Password</label>
-                        <input type="password" name="confirm_password" class="form-control" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100">Register</button>
+                    <button type="submit" class="btn btn-primary w-100">Create Account</button>
                 </form>
                 <p class="text-center text-secondary mt-3 mb-0">
                     <small>Already have an account? <a href="/auth/login">Log in</a></small>

@@ -1,17 +1,9 @@
-# Build Docker image for linux/arm64, push to GHCR, then trigger Dokploy deploy
-#
-# Works for ANY repo — just copy this file into .github/workflows/ and set these secrets:
-#   DOKPLOY_URL        - https://main.spidmax.win
-#   DOKPLOY_API_KEY    - your Dokploy API token
-#   DOKPLOY_COMPOSE_ID - the compose app ID in Dokploy
-#
-# GITHUB_TOKEN is auto-provided with write:packages scope — no PAT needed.
-
 name: Build & Deploy
 
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
@@ -44,14 +36,14 @@ jobs:
           push: true
           tags: |
             ghcr.io/${{ github.repository }}:latest
-            ghcr.io/${{ github.repository }}:${{ github.sha_short }}
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
           platforms: linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Trigger Dokploy deploy
         run: |
-          curl -s -X POST "${{ secrets.DOKPLOY_URL }}/api/compose.deploy" \
+          curl -s -X POST "${{ secrets.DOKPLOY_URL }}/api/application.deploy" \
             -H "x-api-key: ${{ secrets.DOKPLOY_API_KEY }}" \
             -H "Content-Type: application/json" \
-            -d '{"composeId":"${{ secrets.DOKPLOY_COMPOSE_ID }}"}'
+            -d '{"applicationId":"${{ secrets.DOKPLOY_APPLICATION_ID }}"}'

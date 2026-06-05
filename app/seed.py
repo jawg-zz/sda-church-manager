@@ -222,6 +222,12 @@ def seed_demo_data(db, models):
             u.set_password(password)
             db.session.add(u)
 
+    # Create super admin (no church_id — can manage all churches)
+    if not User.query.filter_by(username='superadmin', church_id=None).first():
+        u = User(username='superadmin', role='admin', church_id=None)
+        u.set_password('superadmin')
+        db.session.add(u)
+
     # Seed data for each church
     for church in churches:
         seed_church_data(db, models, church)

@@ -4,7 +4,7 @@ services:
     environment:
       POSTGRES_DB: church_manager
       POSTGRES_USER: sda
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sda_password}
+      POSTGRES_PASSWORD: sda_password
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -12,11 +12,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: "256M"
+    restart: unless-stopped
 
   app:
     image: ghcr.io/jawg-zz/sda-church-manager:latest
@@ -25,9 +21,9 @@ services:
     environment:
       - TZ=Africa/Nairobi
       - FLASK_ENV=production
-      - DATABASE_URL=postgresql://sda:${POSTGRES_PASSWORD:-sda_password}@db:5432/church_manager
-      - SECRET_KEY=${SECRET_KEY:-change-this-in-production}
-      - DEMO_MODE=${DEMO_MODE:-false}
+      - DATABASE_URL=postgresql://sda:sda_password@db:5432/church_manager
+      - SECRET_KEY=church_manager_secret
+      - DEMO_MODE=true
     depends_on:
       db:
         condition: service_healthy
@@ -37,17 +33,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 15s
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: "256M"
-        reservations:
-          cpus: "0.1"
-          memory: "64M"
-      restart_policy:
-        condition: unless-stopped
-        delay: 5s
+    restart: unless-stopped
 
 volumes:
   pgdata:
